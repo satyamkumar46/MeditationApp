@@ -2,6 +2,8 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import ForgotPasswordScreen from "../screens/Auth/ForgotPasswordScreen";
 import SignInScreen from "../screens/Auth/SignInScreen";
 import SignUpScreen from "../screens/Auth/SignUpScreen";
+import EditProfileScreen from "../screens/Profile/EditProfileScreen";
+import NotificationSettingScreen from "../screens/Profile/NotificationSettingScreen";
 import OnboardingScreen from "../screens/Onboarding/OnboardingScreen";
 import SplashScreen from "../screens/Onboarding/SplashScreen";
 import TabNavigator from "./TabNavigator";
@@ -54,6 +56,16 @@ export default function StackNavigator() {
       <stack.Screen
         name="home"
         component={TabNavigator}
+        options={{ headerShown: false }}
+      />
+      <stack.Screen
+        name="EditProfile"
+        component={EditProfileScreen}
+        options={{ headerShown: false }}
+      />
+      <stack.Screen
+        name="NotificationSettings"
+        component={NotificationSettingScreen}
         options={{ headerShown: false }}
       />
     </stack.Navigator>

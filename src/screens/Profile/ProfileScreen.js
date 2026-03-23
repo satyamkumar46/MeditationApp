@@ -117,7 +117,17 @@ const ProfileScreen = ({ navigation }) => {
           <Text style={styles.settingsSectionTitle}>ACCOUNT SETTINGS</Text>
 
           {MENU_ITEMS.map((item) => (
-            <TouchableOpacity key={item.id} style={styles.menuItem}>
+            <TouchableOpacity
+              key={item.id}
+              style={styles.menuItem}
+              onPress={() => {
+                if (item.id === "edit") {
+                  navigation.navigate("EditProfile");
+                } else if (item.id === "notifications") {
+                  navigation.navigate("NotificationSettings");
+                }
+              }}
+            >
               <View style={styles.menuIconContainer}>
                 <Ionicons
                   name={item.icon}
