@@ -1,5 +1,4 @@
 import {
-  Dimensions,
   FlatList,
   Image,
   Platform,
@@ -11,17 +10,7 @@ import {
 } from "react-native";
 import Feather from "react-native-vector-icons/Feather";
 import Ionicons from "react-native-vector-icons/Ionicons";
-
-// Base design dimensions (iPhone 14 Pro)
-const BASE_WIDTH = 390;
-const BASE_HEIGHT = 844;
-
-// Responsive scaling helpers
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
-const scale = (size) => (SCREEN_WIDTH / BASE_WIDTH) * size;
-const verticalScale = (size) => (SCREEN_HEIGHT / BASE_HEIGHT) * size;
-const moderateScale = (size, factor = 0.5) =>
-  size + (scale(size) - size) * factor;
+import { scale, verticalScale, moderateScale } from "../../utility/helpers";
 
 const TABS = ["My Favorites", "Recent Plays", "Downloaded"];
 

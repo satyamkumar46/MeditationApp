@@ -2,7 +2,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef } from "react";
 import {
   Animated,
-  Dimensions,
   Image,
   StatusBar,
   StyleSheet,
@@ -10,8 +9,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { getScreenWidth } from "../../utility/helpers";
 
-const { width, height } = Dimensions.get("window");
+const width = getScreenWidth();
 
 const SplashScreen = ({ navigation }) => {
   // Animation values

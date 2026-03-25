@@ -2,7 +2,6 @@ import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
 import {
   Alert,
-  Dimensions,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -15,14 +14,9 @@ import {
   View,
 } from "react-native";
 import Octicons from "react-native-vector-icons/Octicons";
+import { getScreenWidth, scale, verticalScale, moderateScale } from "../../utility/helpers";
 
-const { width, height } = Dimensions.get("window");
-
-// Responsive scaling helpers
-const scale = (size) => (width / 390) * size;
-const verticalScale = (size) => (height / 844) * size;
-const moderateScale = (size, factor = 0.5) =>
-  size + (scale(size) - size) * factor;
+const width = getScreenWidth();
 
 const SignInScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
