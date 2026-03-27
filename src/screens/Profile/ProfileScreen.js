@@ -114,6 +114,8 @@ const ProfileScreen = ({ navigation }) => {
                   navigation.navigate("EditProfile");
                 } else if (item.id === "notifications") {
                   navigation.navigate("NotificationSettings");
+                } else if (item.id === "help") {
+                  navigation.navigate("Support");
                 }
               }}
             >

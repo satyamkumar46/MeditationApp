@@ -12,9 +12,9 @@ import Feather from "react-native-vector-icons/Feather";
 import Fontisto from "react-native-vector-icons/Fontisto";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import { scale, verticalScale, moderateScale } from "../../utility/helpers";
+import { moderateScale, scale, verticalScale } from "../../utility/helpers";
 
-const HomeScreen = () => {
+const HomeScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#112116" />
@@ -33,7 +33,10 @@ const HomeScreen = () => {
           </View>
           <View style={styles.icons}>
             <TouchableOpacity style={styles.bellIcon}>
-              <TouchableOpacity style={styles.bellIconCircle}>
+              <TouchableOpacity
+                style={styles.bellIconCircle}
+                onPress={() => navigation.navigate("Timer")}
+              >
                 <MaterialCommunityIcons
                   name="clock-time-four-outline"
                   size={moderateScale(22)}
@@ -125,7 +128,91 @@ const HomeScreen = () => {
         </View>
 
         {/* recommended */}
-        <View></View>
+        <View style={styles.recommendedSection}>
+          <View style={styles.recommendedHeader}>
+            <Text style={styles.recommendedTitle}>Recommended for you</Text>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("Recommended")}
+            >
+              <Text style={styles.seeAllText}>See all</Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.recommendedScroll}
+          >
+            <TouchableOpacity
+              style={styles.recommendedCard}
+              onPress={() => navigation.navigate("Player")}
+            >
+              <View style={styles.recommendedImageContainer}>
+                <Image
+                  source={require("../../assest/images/candle-deep-sleep.png")}
+                  style={styles.recommendedImage}
+                  resizeMode="cover"
+                />
+                <View style={styles.recommendedBadge}>
+                  <Text style={styles.recommendedBadgeText}>SLEEP</Text>
+                </View>
+              </View>
+              <Text style={styles.recommendedCardTitle}>Deep Sleep</Text>
+              <View style={styles.recommendedMeta}>
+                <MaterialCommunityIcons
+                  name="clock-time-four-outline"
+                  size={moderateScale(14)}
+                  color="#20DF6099"
+                />
+                <Text style={styles.recommendedDuration}>20 min</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.recommendedCard}>
+              <View style={styles.recommendedImageContainer}>
+                <Image
+                  source={require("../../assest/images/forest-hero.png")}
+                  style={styles.recommendedImage}
+                  resizeMode="cover"
+                />
+                <View style={styles.recommendedBadge}>
+                  <Text style={styles.recommendedBadgeText}>CALM</Text>
+                </View>
+              </View>
+              <Text style={styles.recommendedCardTitle}>Inner Peace</Text>
+              <View style={styles.recommendedMeta}>
+                <MaterialCommunityIcons
+                  name="clock-time-four-outline"
+                  size={moderateScale(14)}
+                  color="#20DF6099"
+                />
+                <Text style={styles.recommendedDuration}>15 min</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.recommendedCard}>
+              <View style={styles.recommendedImageContainer}>
+                <Image
+                  source={require("../../assest/images/morning-calm-image.png")}
+                  style={styles.recommendedImage}
+                  resizeMode="cover"
+                />
+                <View style={styles.recommendedBadge}>
+                  <Text style={styles.recommendedBadgeText}>FOCUS</Text>
+                </View>
+              </View>
+              <Text style={styles.recommendedCardTitle}>Morning Calm</Text>
+              <View style={styles.recommendedMeta}>
+                <MaterialCommunityIcons
+                  name="clock-time-four-outline"
+                  size={moderateScale(14)}
+                  color="#20DF6099"
+                />
+                <Text style={styles.recommendedDuration}>12 min</Text>
+              </View>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
 
         {/* explore category */}
         <View style={styles.exploreHeader}>
@@ -134,7 +221,12 @@ const HomeScreen = () => {
 
         <View style={styles.exploreContainer}>
           <View style={styles.firstSecondContainer}>
-            <TouchableOpacity style={styles.firstContainer}>
+            <TouchableOpacity
+              style={styles.firstContainer}
+              onPress={() =>
+                navigation.navigate("CategoryDetail", { category: "anxiety" })
+              }
+            >
               <Image
                 source={require("../../assest/images/profiling.png")}
                 style={styles.anxietyImage}
@@ -142,7 +234,12 @@ const HomeScreen = () => {
               <Text style={styles.AnxietyText}>Anxiety</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.firstContainer}>
+            <TouchableOpacity
+              style={styles.firstContainer}
+              onPress={() =>
+                navigation.navigate("CategoryDetail", { category: "zen" })
+              }
+            >
               <Image
                 source={require("../../assest/images/person-logo.png")}
                 style={styles.anxietyImage}
@@ -152,7 +249,12 @@ const HomeScreen = () => {
           </View>
 
           <View style={styles.thirdFourthContainer}>
-            <TouchableOpacity style={styles.firstContainer}>
+            <TouchableOpacity
+              style={styles.firstContainer}
+              onPress={() =>
+                navigation.navigate("CategoryDetail", { category: "self-love" })
+              }
+            >
               <Feather
                 name="heart"
                 color="#20DF60"
@@ -162,7 +264,10 @@ const HomeScreen = () => {
               <Text style={styles.AnxietyText}>Self-Love</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.firstContainer}>
+            <TouchableOpacity
+              style={styles.firstContainer}
+              onPress={() => navigation.navigate("Sleep")}
+            >
               <Ionicons
                 name="cloudy-night-outline"
                 color="#20DF60"
@@ -360,6 +465,80 @@ const styles = StyleSheet.create({
     paddingHorizontal: scale(15),
     gap: scale(10),
   },
+  recommendedSection: {
+    marginTop: verticalScale(20),
+    paddingBottom: verticalScale(5),
+  },
+  recommendedHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginHorizontal: scale(16),
+    marginBottom: verticalScale(14),
+  },
+  recommendedTitle: {
+    fontSize: moderateScale(20),
+    fontWeight: "bold",
+    color: "#F1F5F9",
+    letterSpacing: 0.3,
+  },
+  seeAllText: {
+    fontSize: moderateScale(14),
+    color: "#20DF60",
+    fontWeight: "600",
+  },
+  recommendedScroll: {
+    paddingLeft: scale(16),
+    paddingRight: scale(8),
+  },
+  recommendedCard: {
+    width: scale(155),
+    marginRight: scale(12),
+  },
+  recommendedImageContainer: {
+    width: scale(155),
+    height: verticalScale(140),
+    borderRadius: moderateScale(14),
+    overflow: "hidden",
+    position: "relative",
+  },
+  recommendedImage: {
+    width: "100%",
+    height: "100%",
+  },
+  recommendedBadge: {
+    position: "absolute",
+    bottom: moderateScale(8),
+    left: moderateScale(8),
+    backgroundColor: "#112116CC",
+    borderWidth: 1,
+    borderColor: "#20DF6066",
+    paddingHorizontal: scale(8),
+    paddingVertical: verticalScale(3),
+    borderRadius: moderateScale(6),
+  },
+  recommendedBadgeText: {
+    color: "#20DF60",
+    fontSize: moderateScale(10),
+    fontWeight: "bold",
+    letterSpacing: 1,
+  },
+  recommendedCardTitle: {
+    color: "#F1F5F9",
+    fontSize: moderateScale(15),
+    fontWeight: "bold",
+    marginTop: verticalScale(8),
+  },
+  recommendedMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: scale(4),
+    marginTop: verticalScale(4),
+  },
+  recommendedDuration: {
+    color: "#20DF6099",
+    fontSize: moderateScale(12),
+  },
   exploreHeader: {
     marginHorizontal: scale(16),
     paddingTop: verticalScale(20),
@@ -373,14 +552,14 @@ const styles = StyleSheet.create({
   },
   exploreContainer: {
     marginHorizontal: scale(16),
-    height: verticalScale(130),
+    paddingBottom: verticalScale(20),
   },
   firstContainer: {
     borderColor: "#20DF600D",
     borderWidth: 1,
     flexDirection: "row",
     height: verticalScale(70),
-    width: scale(170),
+    flex: 1,
     borderRadius: moderateScale(12),
     backgroundColor: "#064E3B1A",
     alignItems: "center",

@@ -1,5 +1,6 @@
 import {
   Image,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,9 +11,9 @@ import {
 import Feather from "react-native-vector-icons/Feather";
 import Fontisto from "react-native-vector-icons/Fontisto";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import { scale, verticalScale, moderateScale } from "../../utility/helpers";
+import { moderateScale, scale, verticalScale } from "../../utility/helpers";
 
-const ExploreScreen = () => {
+const ExploreScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       {/* header section */}
@@ -57,9 +58,12 @@ const ExploreScreen = () => {
                 Popular Collections
               </Text>
             </View>
-            <View style={styles.popularCategorySeeTextContainer}>
+            <Pressable
+              style={styles.popularCategorySeeTextContainer}
+              onPress={() => navigation.navigate("Collection")}
+            >
               <Text style={styles.popularCategorySeeText}>See all</Text>
-            </View>
+            </Pressable>
           </View>
 
           {/* card */}
@@ -95,9 +99,12 @@ const ExploreScreen = () => {
                 <Text style={styles.topTeachersText}>Top Teachers</Text>
               </View>
 
-              <View style={styles.teacherViewAllContainer}>
+              <Pressable
+                style={styles.teacherViewAllContainer}
+                onPress={() => navigation.navigate("TopTeachers")}
+              >
                 <Text style={styles.teacherViewAllText}>View all</Text>
-              </View>
+              </Pressable>
             </View>
 
             {/* teachers */}
@@ -106,7 +113,10 @@ const ExploreScreen = () => {
               horizontal={true}
               style={styles.teachersContainer}
             >
-              <View style={styles.firstFrame}>
+              <Pressable
+                style={styles.firstFrame}
+                onPress={() => navigation.navigate("TeacherProfile")}
+              >
                 <View style={styles.firstCircle}>
                   <View style={styles.secondCircle}>
                     <Image
@@ -119,7 +129,7 @@ const ExploreScreen = () => {
                 <View style={styles.teacherNameContainer}>
                   <Text style={styles.teacherName}>Elena Joy</Text>
                 </View>
-              </View>
+              </Pressable>
 
               {/* second teacher */}
               <View style={styles.firstFrame}>
