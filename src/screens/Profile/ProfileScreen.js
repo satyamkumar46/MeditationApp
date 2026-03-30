@@ -10,7 +10,8 @@ import {
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import { scale, verticalScale, moderateScale } from "../../utility/helpers";
+import { useSelector } from "react-redux";
+import { moderateScale, scale, verticalScale } from "../../utility/helpers";
 
 const STATS = [
   { label: "SESSIONS", value: "42" },
@@ -43,6 +44,8 @@ const MENU_ITEMS = [
 ];
 
 const ProfileScreen = ({ navigation }) => {
+  const name = useSelector((state) => state.user.name);
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#112116" />
@@ -81,7 +84,7 @@ const ProfileScreen = ({ navigation }) => {
               style={styles.avatar}
             />
           </View>
-          <Text style={styles.userName}>Satyam</Text>
+          <Text style={styles.userName}>{name}</Text>
           <Text style={styles.userRole}>MINDFULNESS PRACTITIONER</Text>
         </View>
 

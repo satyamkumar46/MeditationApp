@@ -12,9 +12,12 @@ import Feather from "react-native-vector-icons/Feather";
 import Fontisto from "react-native-vector-icons/Fontisto";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import { useSelector } from "react-redux";
 import { moderateScale, scale, verticalScale } from "../../utility/helpers";
 
 const HomeScreen = ({ navigation }) => {
+  const name = useSelector((state) => state.user.name);
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#112116" />
@@ -29,7 +32,7 @@ const HomeScreen = ({ navigation }) => {
           <View style={styles.textContainer}>
             <Text style={styles.greet}>WELCOME</Text>
             <Text style={styles.greet2}>Good morning,</Text>
-            <Text style={styles.nameTxt}>Satyam</Text>
+            <Text style={styles.nameTxt}>{name}</Text>
           </View>
           <View style={styles.icons}>
             <TouchableOpacity style={styles.bellIcon}>

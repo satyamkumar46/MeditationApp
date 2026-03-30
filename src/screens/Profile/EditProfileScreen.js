@@ -1,27 +1,63 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useState } from "react";
 import {
-    Image,
-    Platform,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Image,
+  Platform,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
+import { launchImageLibrary } from "react-native-image-picker";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import { scale, verticalScale, moderateScale } from "../../utility/helpers";
+import { useDispatch } from "react-redux";
+import { setName, setProfileImage } from "../../features/slices/userSlice";
+import { moderateScale, scale, verticalScale } from "../../utility/helpers";
+import { supabase } from "../../utility/supabase";
 
 const EditProfileScreen = ({ navigation }) => {
-  const [name, setName] = useState();
-  const [email, setEmail] = useState("alex.rivers@meditation.com");
-  const [bio, setBio] = useState(
-    "Finding peace in the daily rhythm of life.\nFocused on mindfulness and breathwork.",
-  );
+  const [inputName, setInputName] = useState("");
+  const [email, setEmail] = useState("");
+  const [bio, setBio] = useState("");
 
-  const handleSave = () => {
-    // Save logic here
+  const dispatch = useDispatch();
+
+  const openGallery = () => {
+    launchImageLibrary({ mediaType: "photo" }, async (response) => {
+      if (response.didCancel) return;
+
+      console.log("open gallery");
+
+      const uri = response.assets[0].uri;
+      dispatch(setProfileImage(uri));
+
+      await AsyncStorage.setItem("profileImage", uri);
+    });
+  };
+
+  const handleSave = async () => {
+    if (!inputName) return Alert.alert("Enter name");
+
+    const user = (await supabase.auth.getUser()).data.user;
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({ name: inputName })
+      .eq("id", user.id);
+
+    if (error) {
+      Alert.alert("Error", error.message);
+      return;
+    }
+
+    dispatch(setName(inputName));
+
+    Alert.alert("Success", "Name updated");
+
     navigation?.goBack?.();
   };
 
@@ -61,16 +97,8 @@ const EditProfileScreen = ({ navigation }) => {
               source={require("../../assest/images/face.jpg")}
               style={styles.avatar}
             />
-            {/* Camera badge */}
-            <View style={styles.cameraBadge}>
-              <Ionicons
-                name="camera"
-                size={moderateScale(14)}
-                color="#F1F5F9"
-              />
-            </View>
           </View>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={openGallery}>
             <Text style={styles.changePhotoText}>Change Photo</Text>
           </TouchableOpacity>
         </View>
@@ -81,8 +109,8 @@ const EditProfileScreen = ({ navigation }) => {
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.textInput}
-              value={name}
-              onChangeText={setName}
+              value={inputName}
+              onChangeText={setInputName}
               placeholderTextColor="#F1F5F940"
               placeholder="Enter your name"
             />

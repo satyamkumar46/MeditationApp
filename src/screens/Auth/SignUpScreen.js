@@ -14,7 +14,15 @@ import {
   View,
 } from "react-native";
 import Octicons from "react-native-vector-icons/Octicons";
-import { getScreenWidth, scale, verticalScale, moderateScale } from "../../utility/helpers";
+import { useDispatch } from "react-redux";
+import { setName } from "../../features/slices/userSlice";
+import {
+  getScreenWidth,
+  moderateScale,
+  scale,
+  verticalScale,
+} from "../../utility/helpers";
+import { supabase } from "../../utility/supabase";
 
 const width = getScreenWidth();
 
@@ -24,21 +32,58 @@ const SignUpScreen = ({ navigation }) => {
   const [password, setPasswod] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
+  const dispatch = useDispatch();
+
   const handlePasswordShow = () => {
     setIsPasswordVisible(!isPasswordVisible);
   };
 
-  const handleCreateAccount = () => {
+  const handleCreateAccount = async () => {
     if (!email && !password && !fullname) {
       Alert.alert("Missing Fields", "All are required");
+      return;
     } else if (!email) {
       Alert.alert("Missing Fields", "Email is required");
+      return;
     } else if (!password) {
       Alert.alert("Missing Fields", "Password is required");
+      return;
     } else if (!fullname) {
       Alert.alert("Missing Fields", "Name is required");
-    } else {
-      navigation.navigate("home");
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) {
+        Alert.alert("Error", error.message);
+        return;
+      }
+
+      const user = data.user;
+
+      const { error: dbError } = await supabase.from("profiles").insert([
+        {
+          id: user.id,
+          name: fullname,
+          image_url: null,
+        },
+      ]);
+
+      if (dbError) {
+        Alert.alert("DB Error", dbError.message);
+      }
+
+      Alert.alert("Success", "Account created successfully");
+
+      dispatch(setName(user.name));
+      navigation.navigate("Sign In");
+    } catch (error) {
+      Alert.alert("Error", error.message);
     }
   };
 

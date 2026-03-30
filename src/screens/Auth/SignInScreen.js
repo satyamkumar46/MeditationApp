@@ -14,7 +14,15 @@ import {
   View,
 } from "react-native";
 import Octicons from "react-native-vector-icons/Octicons";
-import { getScreenWidth, scale, verticalScale, moderateScale } from "../../utility/helpers";
+import { useDispatch } from "react-redux";
+import { setName, setProfileImage } from "../../features/slices/userSlice";
+import {
+  getScreenWidth,
+  moderateScale,
+  scale,
+  verticalScale,
+} from "../../utility/helpers";
+import { supabase } from "../../utility/supabase";
 
 const width = getScreenWidth();
 
@@ -23,15 +31,52 @@ const SignInScreen = ({ navigation }) => {
   const [password, setPasswod] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
-  const handleSignIn = () => {
+  const dispatch = useDispatch();
+
+  const handleSignIn = async () => {
     if (!email && !password) {
       Alert.alert("Missing Fields", "Please enter email and password");
+      return;
     } else if (!email) {
       Alert.alert("Missing Fields", "Email is required");
+      return;
     } else if (!password) {
       Alert.alert("Missing Fields", "Password is required");
-    } else {
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        Alert.alert("Login Error", error.message);
+        return;
+      }
+
+      const user = data.user;
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      if (profileError) {
+        Alert.alert("Error", profileError.message);
+        return;
+      }
+
+      console.log("user profile", profile.name);
+
+      dispatch(setName(profile.name));
+      dispatch(setProfileImage(profile.image_url));
+
       navigation.navigate("home");
+    } catch (error) {
+      Alert.alert("Error", err.message);
     }
   };
 
