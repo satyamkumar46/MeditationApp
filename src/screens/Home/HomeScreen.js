@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   Image,
   Platform,
@@ -15,9 +16,30 @@ import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityI
 import { useSelector } from "react-redux";
 import { moderateScale, scale, verticalScale } from "../../utility/helpers";
 
+const getGreeting = () => {
+  const hours = new Date().getHours();
+
+  if (hours < 12) {
+    return "Good morning";
+  }
+  if (hours < 18) return "Good Afternoon";
+
+  return "Good Evening";
+};
+
 const HomeScreen = ({ navigation }) => {
+  const [greet, setGreet] = useState(getGreeting());
+
   const name = useSelector((state) => state.user.name);
   const profileImage = useSelector((state) => state.user.profileImage);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setGreet(getGreeting());
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -36,7 +58,7 @@ const HomeScreen = ({ navigation }) => {
           />
           <View style={styles.textContainer}>
             <Text style={styles.greet}>WELCOME</Text>
-            <Text style={styles.greet2}>Good morning,</Text>
+            <Text style={styles.greet2}>{greet},</Text>
             <Text style={styles.nameTxt}>{name}</Text>
           </View>
           <View style={styles.icons}>
