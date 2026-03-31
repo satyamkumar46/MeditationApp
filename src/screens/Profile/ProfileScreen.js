@@ -45,6 +45,7 @@ const MENU_ITEMS = [
 
 const ProfileScreen = ({ navigation }) => {
   const name = useSelector((state) => state.user.name);
+  const profileImage = useSelector((state) => state.user.profileImage);
 
   return (
     <View style={styles.container}>
@@ -80,7 +81,11 @@ const ProfileScreen = ({ navigation }) => {
         <View style={styles.avatarSection}>
           <View style={styles.avatarContainer}>
             <Image
-              source={require("../../assest/images/face.jpg")}
+              source={
+                profileImage
+                  ? { uri: profileImage }
+                  : require("../../assest/images/face.jpg")
+              }
               style={styles.avatar}
             />
           </View>

@@ -1,4 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
 import {
   Alert,
@@ -12,9 +12,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { launchImageLibrary } from "react-native-image-picker";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setName, setProfileImage } from "../../features/slices/userSlice";
 import { moderateScale, scale, verticalScale } from "../../utility/helpers";
 import { supabase } from "../../utility/supabase";
@@ -23,42 +22,119 @@ const EditProfileScreen = ({ navigation }) => {
   const [inputName, setInputName] = useState("");
   const [email, setEmail] = useState("");
   const [bio, setBio] = useState("");
+  const [selectedImage, setSelectedImage] = useState(null);
 
   const dispatch = useDispatch();
 
-  const openGallery = () => {
-    launchImageLibrary({ mediaType: "photo" }, async (response) => {
-      if (response.didCancel) return;
+  const profileImage = useSelector((state) => state.user.profileImage);
+  console.log("Redux Image:", profileImage);
 
-      console.log("open gallery");
+  const openGallery = async () => {
+    try {
+      // Ask permission
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-      const uri = response.assets[0].uri;
-      dispatch(setProfileImage(uri));
+      console.log("Permission status:", status);
 
-      await AsyncStorage.setItem("profileImage", uri);
-    });
+      if (status !== "granted") {
+        Alert.alert("Permission Denied", "Allow gallery access");
+        return;
+      }
+
+      // Open gallery
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.5,
+      });
+
+      if (!result.canceled) {
+        const uri = result.assets[0].uri;
+        setSelectedImage(uri);
+      }
+    } catch (err) {
+      console.log("Gallery Error:", err);
+    }
   };
 
   const handleSave = async () => {
-    if (!inputName) return Alert.alert("Enter name");
+    if (!inputName && !selectedImage) {
+      return Alert.alert("No changes made");
+    }
 
-    const user = (await supabase.auth.getUser()).data.user;
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    const { error } = await supabase
-      .from("profiles")
-      .update({ name: inputName })
-      .eq("id", user.id);
-
-    if (error) {
-      Alert.alert("Error", error.message);
+    if (!user || !user.id) {
+      Alert.alert("Error", "User not found");
       return;
     }
 
-    dispatch(setName(inputName));
+    let updatedData = {};
 
-    Alert.alert("Success", "Name updated");
+    try {
+      if (inputName) {
+        updatedData.name = inputName;
+      }
 
-    navigation?.goBack?.();
+      if (selectedImage) {
+        // console.log("Selected:", selectedImage);
+
+        const fileName = `${user.id}.jpg`;
+
+        const response = await fetch(selectedImage);
+        const arrayBuffer = await response.arrayBuffer();
+
+        const { error: uploadError } = await supabase.storage
+          .from("avatars")
+          .upload(fileName, arrayBuffer, {
+            contentType: "image/jpeg",
+            upsert: true,
+          });
+
+        if (uploadError) {
+          console.log(uploadError);
+          Alert.alert("Upload Error", uploadError.message);
+          return;
+        }
+
+        // public link
+        const { data } = supabase.storage
+          .from("avatars")
+          .getPublicUrl(fileName);
+
+        const imageUrl = data.publicUrl + "?t=" + new Date().getTime();
+        updatedData.image_url = imageUrl;
+      }
+
+      const { error } = await supabase
+        .from("profiles")
+        .update(updatedData)
+        .eq("id", user.id);
+
+      if (error) {
+        Alert.alert("Error", error.message);
+        return;
+      }
+
+      if (Object.keys(updatedData).length === 0) {
+        Alert.alert("No changes made");
+        return;
+      }
+
+      if (updatedData.name) {
+        dispatch(setName(inputName));
+      }
+
+      if (updatedData.image_url) {
+        dispatch(setProfileImage(updatedData.image_url));
+      }
+      Alert.alert("Success", "Profile updated ✅");
+      navigation.goBack();
+    } catch (error) {
+      Alert.alert("Error", error.message);
+    }
   };
 
   const handleCancel = () => {
@@ -94,7 +170,13 @@ const EditProfileScreen = ({ navigation }) => {
         <View style={styles.avatarSection}>
           <View style={styles.avatarContainer}>
             <Image
-              source={require("../../assest/images/face.jpg")}
+              source={
+                selectedImage
+                  ? { uri: selectedImage }
+                  : profileImage
+                    ? { uri: profileImage }
+                    : require("../../assest/images/face.jpg")
+              }
               style={styles.avatar}
             />
           </View>

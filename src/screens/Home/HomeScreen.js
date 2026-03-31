@@ -17,6 +17,7 @@ import { moderateScale, scale, verticalScale } from "../../utility/helpers";
 
 const HomeScreen = ({ navigation }) => {
   const name = useSelector((state) => state.user.name);
+  const profileImage = useSelector((state) => state.user.profileImage);
 
   return (
     <View style={styles.container}>
@@ -26,7 +27,11 @@ const HomeScreen = ({ navigation }) => {
       <View style={styles.topHeader}>
         <View style={styles.headerContainer}>
           <Image
-            source={require("../../assest/images/face.jpg")}
+            source={
+              profileImage
+                ? { uri: profileImage }
+                : require("../../assest/images/face.jpg")
+            }
             style={styles.avatarStyle}
           />
           <View style={styles.textContainer}>
@@ -307,8 +312,8 @@ const styles = StyleSheet.create({
     paddingLeft: scale(12),
   },
   avatarStyle: {
-    height: moderateScale(42),
-    width: moderateScale(42),
+    height: moderateScale(47),
+    width: moderateScale(47),
     borderRadius: moderateScale(21),
   },
   greet: {
