@@ -144,19 +144,19 @@ const LibraryScreen = ({ navigation }) => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.headerIconBtn}>
-          <Ionicons
+          {/* <Ionicons
             name="settings-outline"
             size={moderateScale(22)}
             color="#F1F5F9"
-          />
+          /> */}
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Library</Text>
         <TouchableOpacity style={styles.headerIconBtn}>
-          <Ionicons
+          {/* <Ionicons
             name="search-outline"
             size={moderateScale(22)}
             color="#F1F5F9"
-          />
+          /> */}
         </TouchableOpacity>
       </View>
 

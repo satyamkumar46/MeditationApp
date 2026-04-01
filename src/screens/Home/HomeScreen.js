@@ -46,6 +46,7 @@ const getCategoryIcon = (catname) => {
   return CATEGORY_ICONS[catname] || "ellipse-outline";
 };
 
+
 const HomeScreen = ({ navigation }) => {
   const [greet, setGreet] = useState(getGreeting());
 

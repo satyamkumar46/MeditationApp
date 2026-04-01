@@ -12,15 +12,24 @@ import {
   View,
 } from "react-native";
 import Feather from "react-native-vector-icons/Feather";
-import Fontisto from "react-native-vector-icons/Fontisto";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import useSounds from "../../hooks/useSounds";
 import useTeachers from "../../hooks/useTeachers";
 import { moderateScale, scale, verticalScale } from "../../utility/helpers";
 
 const ExploreScreen = ({ navigation }) => {
-  const { teachers, loading: teachersLoading, error, refetch: refetchTeachers } = useTeachers();
-  const { allTracks, categories, loading: soundsLoading, refetch: refetchSounds } = useSounds();
+  const {
+    teachers,
+    loading: teachersLoading,
+    error,
+    refetch: refetchTeachers,
+  } = useTeachers();
+  const {
+    allTracks,
+    categories,
+    loading: soundsLoading,
+    refetch: refetchSounds,
+  } = useSounds();
   const [activeTeacherId, setActiveTeacherId] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -54,11 +63,6 @@ const ExploreScreen = ({ navigation }) => {
         <View style={styles.headerTextContainer}>
           <View style={styles.headerTextContainerSecond}>
             <Text style={styles.headerText}>Explore</Text>
-          </View>
-
-          {/* bell-icon */}
-          <View style={styles.headerBellIconContainer}>
-            <Fontisto name="bell" color="#94A3B8" size={24} />
           </View>
         </View>
 
