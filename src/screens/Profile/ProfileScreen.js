@@ -1,4 +1,6 @@
+import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   Platform,
   ScrollView,
@@ -12,12 +14,7 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { useSelector } from "react-redux";
 import { moderateScale, scale, verticalScale } from "../../utility/helpers";
-
-const STATS = [
-  { label: "SESSIONS", value: "42" },
-  { label: "MINUTES", value: "1,240" },
-  { label: "STREAK", value: "12d" },
-];
+import { fetchStreak } from "../../services/streakService";
 
 const MENU_ITEMS = [
   {
@@ -43,9 +40,43 @@ const MENU_ITEMS = [
   },
 ];
 
+const formatNumber = (num) => {
+  if (num >= 1000) return (num / 1000).toFixed(1).replace(/\.0$/, "") + "k";
+  return String(num);
+};
+
 const ProfileScreen = ({ navigation }) => {
   const name = useSelector((state) => state.user.name);
   const profileImage = useSelector((state) => state.user.profileImage);
+
+  const [stats, setStats] = useState([
+    { label: "SESSIONS", value: "—" },
+    { label: "MINUTES", value: "—" },
+    { label: "STREAK", value: "—" },
+  ]);
+  const [loadingStats, setLoadingStats] = useState(true);
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        setLoadingStats(true);
+        const data = await fetchStreak();
+        setStats([
+          { label: "SESSIONS", value: formatNumber(data.total_sessions || 0) },
+          { label: "MINUTES", value: formatNumber(data.total_minutes || 0) },
+          {
+            label: "STREAK",
+            value: `${data.streak_count || 0}d`,
+          },
+        ]);
+      } catch (err) {
+        console.error("Error loading profile stats:", err);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+    loadStats();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -65,11 +96,11 @@ const ProfileScreen = ({ navigation }) => {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Profile</Text>
         <TouchableOpacity style={styles.headerIconBtn}>
-          <Ionicons
+          {/* <Ionicons
             name="settings-outline"
             size={moderateScale(22)}
             color="#F1F5F9"
-          />
+          /> */}
         </TouchableOpacity>
       </View>
 
@@ -95,16 +126,20 @@ const ProfileScreen = ({ navigation }) => {
 
         {/* Stats Section */}
         <View style={styles.statsContainer}>
-          {STATS.map((stat, index) => (
+          {stats.map((stat, index) => (
             <View
               key={stat.label}
               style={[
                 styles.statCard,
-                index < STATS.length - 1 && { marginRight: scale(10) },
+                index < stats.length - 1 && { marginRight: scale(10) },
               ]}
             >
               <Text style={styles.statLabel}>{stat.label}</Text>
-              <Text style={styles.statValue}>{stat.value}</Text>
+              {loadingStats ? (
+                <ActivityIndicator size="small" color="#20DF60" style={{ marginTop: verticalScale(6) }} />
+              ) : (
+                <Text style={styles.statValue}>{stat.value}</Text>
+              )}
             </View>
           ))}
         </View>

@@ -1,4 +1,5 @@
 import {
+  ActivityIndicator,
   Image,
   Platform,
   ScrollView,
@@ -10,50 +11,22 @@ import {
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import useTeachers from "../../hooks/useTeachers";
 import { scale, verticalScale, moderateScale } from "../../utility/helpers";
-
-const INSTRUCTORS = [
-  {
-    id: 1,
-    name: "Elena Rodriguez",
-    specialty: "Mindfulness Coach",
-    rating: 4.9,
-    students: "8.4k Students",
-    image: require("../../assest/images/first-Teacher-Img.png"),
-    verified: true,
-  },
-  {
-    id: 2,
-    name: "Marcus Chen",
-    specialty: "Breathwork Expert",
-    rating: 4.8,
-    students: "15.2k Students",
-    image: require("../../assest/images/Second-Teacher-Img.png"),
-    verified: false,
-  },
-  {
-    id: 3,
-    name: "Sana Kapoor",
-    specialty: "Vedic Specialist",
-    rating: 5.0,
-    students: "5.9k Students",
-    image: require("../../assest/images/third-teacher-image.png"),
-    verified: false,
-  },
-  {
-    id: 4,
-    name: "Dr. Julian Vance",
-    specialty: "Sound Therapist",
-    rating: 4.7,
-    students: "11k Students",
-    image: require("../../assest/images/fourth-teacher-img.png"),
-    verified: false,
-  },
-];
 
 const CATEGORIES = ["All", "Mindfulness", "Zen Master", "Breathwork", "Sleep Expert"];
 
 const TopTeachersScreen = ({ navigation }) => {
+  const { teachers, loading, error } = useTeachers();
+
+  if (loading) {
+    return (
+      <View style={styles.loadingScreen}>
+        <ActivityIndicator size="large" color="#20DF60" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#112116" />
@@ -74,51 +47,54 @@ const TopTeachersScreen = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
       >
         {/* Featured Teacher Hero */}
-        <View style={styles.heroCard}>
-          <Image
-            source={require("../../assest/images/teacher-hero.png")}
-            style={styles.heroImage}
-            resizeMode="cover"
-          />
-          <View style={styles.heroOverlay} />
-          <View style={styles.heroContent}>
-            <View style={styles.masterclassBadge}>
-              <Text style={styles.masterclassText}>MASTERCLASS</Text>
-            </View>
-            <Text style={styles.heroName}>Dr. Aris Thorne</Text>
-            <Text style={styles.heroMeta}>Zen Master • 15+ Years Experience</Text>
-            <View style={styles.heroBottom}>
-              <TouchableOpacity
-                style={styles.viewProfileBtn}
-                onPress={() => navigation.navigate("TeacherProfile")}
-              >
-                <Text style={styles.viewProfileText}>View Profile</Text>
-              </TouchableOpacity>
-              <View style={styles.avatarStack}>
-                <View style={[styles.stackAvatar, { zIndex: 3 }]}>
-                  <Image
-                    source={require("../../assest/images/first-Teacher-Img.png")}
-                    style={styles.stackAvatarImg}
-                  />
-                </View>
-                <View
-                  style={[
-                    styles.stackAvatar,
-                    { marginLeft: scale(-10), zIndex: 2 },
-                  ]}
+        {teachers.length > 0 && (
+          <View style={styles.heroCard}>
+            <Image
+              source={{ uri: teachers[0].image }}
+              style={styles.heroImage}
+              resizeMode="cover"
+            />
+            <View style={styles.heroOverlay} />
+            <View style={styles.heroContent}>
+              <View style={styles.masterclassBadge}>
+                <Text style={styles.masterclassText}>MASTERCLASS</Text>
+              </View>
+              <Text style={styles.heroName}>{teachers[0].name}</Text>
+              <Text style={styles.heroMeta}>
+                {teachers[0].expertise} • {teachers[0].session} Sessions
+              </Text>
+              <View style={styles.heroBottom}>
+                <TouchableOpacity
+                  style={styles.viewProfileBtn}
+                  onPress={() => navigation.navigate("TeacherProfile", { teacher: teachers[0] })}
                 >
-                  <Image
-                    source={require("../../assest/images/Second-Teacher-Img.png")}
-                    style={styles.stackAvatarImg}
-                  />
-                </View>
-                <View style={styles.stackCount}>
-                  <Text style={styles.stackCountText}>+12k</Text>
+                  <Text style={styles.viewProfileText}>View Profile</Text>
+                </TouchableOpacity>
+                <View style={styles.avatarStack}>
+                  {teachers.slice(1, 3).map((t, idx) => (
+                    <View
+                      key={t._id}
+                      style={[
+                        styles.stackAvatar,
+                        { zIndex: 3 - idx, marginLeft: idx > 0 ? scale(-10) : 0 },
+                      ]}
+                    >
+                      <Image
+                        source={{ uri: t.image }}
+                        style={styles.stackAvatarImg}
+                      />
+                    </View>
+                  ))}
+                  <View style={styles.stackCount}>
+                    <Text style={styles.stackCountText}>
+                      +{teachers.length - 3}
+                    </Text>
+                  </View>
                 </View>
               </View>
             </View>
           </View>
-        </View>
+        )}
 
         {/* All Instructors */}
         <View style={styles.instructorsHeader}>
@@ -134,54 +110,53 @@ const TopTeachersScreen = ({ navigation }) => {
 
         {/* Instructor list */}
         <View style={styles.instructorList}>
-          {INSTRUCTORS.map((instructor) => (
-            <TouchableOpacity
-              key={instructor.id}
-              style={styles.instructorCard}
-              onPress={() => navigation.navigate("TeacherProfile")}
-            >
-              <View style={styles.instructorAvatar}>
-                <Image
-                  source={instructor.image}
-                  style={styles.instructorImg}
-                />
-                {instructor.verified && (
-                  <View style={styles.verifiedBadge}>
-                    <Ionicons
-                      name="checkmark-circle"
-                      size={moderateScale(16)}
-                      color="#20DF60"
-                    />
-                  </View>
-                )}
-              </View>
-              <View style={styles.instructorInfo}>
-                <Text style={styles.instructorName}>{instructor.name}</Text>
-                <Text style={styles.instructorSpecialty}>
-                  {instructor.specialty}
-                </Text>
-                <View style={styles.ratingRow}>
-                  <Ionicons
-                    name="star"
-                    size={moderateScale(14)}
-                    color="#FBBF24"
-                  />
-                  <Text style={styles.ratingText}>{instructor.rating}</Text>
-                  <Text style={styles.studentsText}>{instructor.students}</Text>
-                </View>
-              </View>
+          {error ? (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>Failed to load teachers</Text>
+            </View>
+          ) : (
+            teachers.map((teacher) => (
               <TouchableOpacity
-                style={styles.arrowBtn}
-                onPress={() => navigation.navigate("TeacherProfile")}
+                key={teacher._id}
+                style={styles.instructorCard}
+                onPress={() => navigation.navigate("TeacherProfile", { teacher })}
               >
-                <Ionicons
-                  name="chevron-forward"
-                  size={moderateScale(20)}
-                  color="#20DF60"
-                />
+                <View style={styles.instructorAvatar}>
+                  <Image
+                    source={{ uri: teacher.image }}
+                    style={styles.instructorImg}
+                  />
+                </View>
+                <View style={styles.instructorInfo}>
+                  <Text style={styles.instructorName}>{teacher.name}</Text>
+                  <Text style={styles.instructorSpecialty}>
+                    {teacher.expertise}
+                  </Text>
+                  <View style={styles.ratingRow}>
+                    <Ionicons
+                      name="star"
+                      size={moderateScale(14)}
+                      color="#FBBF24"
+                    />
+                    <Text style={styles.ratingText}>{teacher.rating}</Text>
+                    <Text style={styles.studentsText}>
+                      {teacher.students} Students
+                    </Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={styles.arrowBtn}
+                  onPress={() => navigation.navigate("TeacherProfile", { teacher })}
+                >
+                  <Ionicons
+                    name="chevron-forward"
+                    size={moderateScale(20)}
+                    color="#20DF60"
+                  />
+                </TouchableOpacity>
               </TouchableOpacity>
-            </TouchableOpacity>
-          ))}
+            ))
+          )}
         </View>
 
         {/* Categories */}
@@ -220,6 +195,12 @@ const TopTeachersScreen = ({ navigation }) => {
 export default TopTeachersScreen;
 
 const styles = StyleSheet.create({
+  loadingScreen: {
+    flex: 1,
+    backgroundColor: "#112116",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   container: {
     flex: 1,
     backgroundColor: "#112116",
@@ -356,6 +337,14 @@ const styles = StyleSheet.create({
     marginTop: verticalScale(12),
     paddingHorizontal: scale(16),
   },
+  errorContainer: {
+    paddingVertical: verticalScale(20),
+    alignItems: "center",
+  },
+  errorText: {
+    color: "#FF6B6B",
+    fontSize: moderateScale(14),
+  },
   instructorCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -370,13 +359,6 @@ const styles = StyleSheet.create({
     width: moderateScale(56),
     height: moderateScale(56),
     borderRadius: moderateScale(28),
-  },
-  verifiedBadge: {
-    position: "absolute",
-    bottom: 0,
-    right: 0,
-    backgroundColor: "#112116",
-    borderRadius: moderateScale(10),
   },
   instructorInfo: {
     flex: 1,

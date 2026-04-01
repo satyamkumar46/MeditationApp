@@ -1,4 +1,5 @@
 import {
+  ActivityIndicator,
   Image,
   Platform,
   ScrollView,
@@ -13,7 +14,19 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { moderateScale, scale, verticalScale } from "../../utility/helpers";
 
-const CATEGORY_DATA = {
+const CATEGORY_ICONS = {
+  Mindfulness: "leaf-outline",
+  Relax: "water-outline",
+  "Nature Sound": "earth-outline",
+  Sleep: "cloudy-night-outline",
+  Breathwork: "fitness-outline",
+  "Quick Reset": "flash-outline",
+  Guided: "compass-outline",
+  Ambient: "musical-notes-outline",
+  Binaural: "headset-outline",
+};
+
+const LEGACY_CATEGORY_DATA = {
   "self-love": {
     title: "Self-Love",
     badge: "CATEGORY",
@@ -132,7 +145,276 @@ const CATEGORY_DATA = {
 
 const CategoryDetailScreen = ({ navigation, route }) => {
   const categoryKey = route?.params?.category || "self-love";
-  const data = CATEGORY_DATA[categoryKey] || CATEGORY_DATA["self-love"];
+  const categoryData = route?.params?.categoryData;
+
+  // If we have API category data (from sounds API), render the API tracks view
+  const isApiCategory = !!categoryData;
+  const legacyData = LEGACY_CATEGORY_DATA[categoryKey];
+
+  const renderApiCategoryContent = () => {
+    const tracks = categoryData?.tracks || [];
+    const catIcon = CATEGORY_ICONS[categoryData?.catname] || "ellipse-outline";
+
+    return (
+      <View style={styles.container}>
+        <StatusBar
+          barStyle="light-content"
+          backgroundColor="transparent"
+          translucent
+        />
+
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {/* Hero */}
+          <View style={styles.heroSection}>
+            {tracks.length > 0 ? (
+              <Image
+                source={{ uri: tracks[0].thumbnail }}
+                style={styles.heroImage}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={[styles.heroImage, { backgroundColor: "#0D3320" }]} />
+            )}
+            <View style={styles.heroOverlay} />
+
+            {/* Header */}
+            <View style={styles.header}>
+              <TouchableOpacity
+                onPress={() => navigation.goBack()}
+                style={styles.backBtn}
+              >
+                <Ionicons
+                  name="arrow-back"
+                  size={moderateScale(22)}
+                  color="#F1F5F9"
+                />
+              </TouchableOpacity>
+              <Text style={styles.headerTitle}>{categoryData?.catname}</Text>
+            </View>
+
+            {/* Hero content */}
+            <View style={styles.heroContent}>
+              <View style={styles.categoryBadge}>
+                <Text style={styles.categoryBadgeText}>
+                  {categoryData?.catname?.toUpperCase()} COLLECTION
+                </Text>
+              </View>
+              <Text style={styles.heroTitle}>{categoryData?.catname}</Text>
+              <Text style={styles.heroDescription}>
+                {tracks.length} tracks available • Curated meditation sounds
+              </Text>
+              {tracks.length > 0 && (
+                <TouchableOpacity
+                  style={styles.ctaBtn}
+                  onPress={() =>
+                    navigation.navigate("Player", {
+                      track: {
+                        ...tracks[0],
+                        catname: categoryData.catname,
+                      },
+                    })
+                  }
+                >
+                  <Feather
+                    name="play"
+                    size={moderateScale(18)}
+                    color="#112116"
+                  />
+                  <Text style={styles.ctaBtnText}>Play First</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+
+          {/* Stats Row */}
+          <View style={styles.apiStatsRow}>
+            <View style={styles.apiStatCard}>
+              <Ionicons
+                name={catIcon}
+                size={moderateScale(22)}
+                color="#20DF60"
+              />
+              <Text style={styles.apiStatValue}>{tracks.length}</Text>
+              <Text style={styles.apiStatLabel}>TRACKS</Text>
+            </View>
+            <View style={styles.apiStatCard}>
+              <Ionicons
+                name="time-outline"
+                size={moderateScale(22)}
+                color="#20DF60"
+              />
+              <Text style={styles.apiStatValue}>
+                {tracks.reduce((total, t) => {
+                  const parts = t.duration.split(":");
+                  return total + parseInt(parts[0] || 0);
+                }, 0)}
+              </Text>
+              <Text style={styles.apiStatLabel}>MINUTES</Text>
+            </View>
+            <View style={styles.apiStatCard}>
+              <Ionicons
+                name="people-outline"
+                size={moderateScale(22)}
+                color="#20DF60"
+              />
+              <Text style={styles.apiStatValue}>
+                {new Set(tracks.map((t) => t.teacher?.name)).size}
+              </Text>
+              <Text style={styles.apiStatLabel}>TEACHERS</Text>
+            </View>
+          </View>
+
+          {/* Tracks Header */}
+          <View style={styles.apiTracksHeader}>
+            <Text style={styles.apiTracksTitle}>All Tracks</Text>
+            <Text style={styles.apiTracksCount}>
+              {tracks.length} TOTAL
+            </Text>
+          </View>
+
+          {/* Track List */}
+          <View style={styles.apiTrackList}>
+            {tracks.map((track, idx) => (
+              <TouchableOpacity
+                key={track._id}
+                style={styles.apiTrackCard}
+                onPress={() =>
+                  navigation.navigate("Player", {
+                    track: { ...track, catname: categoryData.catname },
+                  })
+                }
+              >
+                <View style={styles.apiTrackIndex}>
+                  <Text style={styles.apiTrackIndexText}>
+                    {String(idx + 1).padStart(2, "0")}
+                  </Text>
+                </View>
+                <Image
+                  source={{ uri: track.thumbnail }}
+                  style={styles.apiTrackImage}
+                />
+                <View style={styles.apiTrackInfo}>
+                  <Text style={styles.apiTrackTitle} numberOfLines={1}>
+                    {track.title}
+                  </Text>
+                  <Text style={styles.apiTrackMeta}>
+                    {track.duration} • {track.teacher?.name}
+                  </Text>
+                  <View style={styles.apiTrackRating}>
+                    <Ionicons
+                      name="star"
+                      size={moderateScale(12)}
+                      color="#FBBF24"
+                    />
+                    <Text style={styles.apiTrackRatingText}>
+                      {track.teacher?.rating}
+                    </Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={styles.apiTrackPlayBtn}
+                  onPress={() =>
+                    navigation.navigate("Player", {
+                      track: { ...track, catname: categoryData.catname },
+                    })
+                  }
+                >
+                  <Feather
+                    name="play"
+                    size={moderateScale(18)}
+                    color="#20DF60"
+                  />
+                </TouchableOpacity>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Teacher Section */}
+          {tracks.length > 0 && (
+            <View style={styles.apiTeacherSection}>
+              <Text style={styles.apiTeacherSectionTitle}>
+                Teachers in this category
+              </Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.apiTeacherScroll}
+              >
+                {[
+                  ...new Map(
+                    tracks.map((t) => [t.teacher?.name, t.teacher])
+                  ).values(),
+                ].map((teacher) =>
+                  teacher ? (
+                    <View key={teacher._id} style={styles.apiTeacherCard}>
+                      <Image
+                        source={{ uri: teacher.image }}
+                        style={styles.apiTeacherImage}
+                      />
+                      <Text
+                        style={styles.apiTeacherName}
+                        numberOfLines={1}
+                      >
+                        {teacher.name}
+                      </Text>
+                      <View style={styles.apiTeacherRatingRow}>
+                        <Ionicons
+                          name="star"
+                          size={moderateScale(11)}
+                          color="#FBBF24"
+                        />
+                        <Text style={styles.apiTeacherRatingText}>
+                          {teacher.rating}
+                        </Text>
+                      </View>
+                    </View>
+                  ) : null
+                )}
+              </ScrollView>
+            </View>
+          )}
+        </ScrollView>
+      </View>
+    );
+  };
+
+  // If no legacy data and no API data, show fallback
+  if (!isApiCategory && !legacyData) {
+    return (
+      <View style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor="#112116" />
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backBtn}
+          >
+            <Ionicons
+              name="arrow-back"
+              size={moderateScale(22)}
+              color="#F1F5F9"
+            />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{categoryKey}</Text>
+        </View>
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <Text style={{ color: "#94A3B8", fontSize: moderateScale(16) }}>
+            Category not found
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
+  // Render API-based category
+  if (isApiCategory) {
+    return renderApiCategoryContent();
+  }
+
+  // Below is legacy category rendering
+  const data = legacyData;
 
   const renderSelfLoveContent = () => (
     <>
@@ -465,6 +747,157 @@ const styles = StyleSheet.create({
     color: "#112116",
     fontSize: moderateScale(15),
     fontWeight: "bold",
+  },
+
+  /* ===== API CATEGORY STYLES ===== */
+  apiStatsRow: {
+    flexDirection: "row",
+    paddingHorizontal: scale(16),
+    marginTop: verticalScale(16),
+    gap: scale(8),
+  },
+  apiStatCard: {
+    flex: 1,
+    backgroundColor: "#0D3320",
+    borderRadius: moderateScale(12),
+    borderWidth: 1,
+    borderColor: "#20DF6033",
+    paddingVertical: verticalScale(14),
+    alignItems: "center",
+    gap: verticalScale(4),
+  },
+  apiStatValue: {
+    color: "#F1F5F9",
+    fontSize: moderateScale(22),
+    fontWeight: "bold",
+  },
+  apiStatLabel: {
+    color: "#94A3B8",
+    fontSize: moderateScale(10),
+    fontWeight: "bold",
+    letterSpacing: 0.8,
+  },
+  apiTracksHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: scale(16),
+    marginTop: verticalScale(24),
+    marginBottom: verticalScale(12),
+  },
+  apiTracksTitle: {
+    color: "#F1F5F9",
+    fontSize: moderateScale(20),
+    fontWeight: "bold",
+  },
+  apiTracksCount: {
+    color: "#20DF60",
+    fontSize: moderateScale(13),
+    fontWeight: "bold",
+    letterSpacing: 0.5,
+  },
+  apiTrackList: {
+    paddingHorizontal: scale(16),
+  },
+  apiTrackCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: verticalScale(12),
+    borderBottomWidth: 1,
+    borderBottomColor: "#20DF600D",
+  },
+  apiTrackIndex: {
+    width: scale(28),
+    alignItems: "center",
+  },
+  apiTrackIndexText: {
+    color: "#94A3B8",
+    fontSize: moderateScale(14),
+    fontWeight: "bold",
+  },
+  apiTrackImage: {
+    width: moderateScale(52),
+    height: moderateScale(52),
+    borderRadius: moderateScale(10),
+    marginLeft: scale(8),
+  },
+  apiTrackInfo: {
+    flex: 1,
+    marginLeft: scale(12),
+  },
+  apiTrackTitle: {
+    color: "#F1F5F9",
+    fontSize: moderateScale(15),
+    fontWeight: "bold",
+    lineHeight: moderateScale(20),
+  },
+  apiTrackMeta: {
+    color: "#94A3B8",
+    fontSize: moderateScale(12),
+    marginTop: verticalScale(2),
+  },
+  apiTrackRating: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: scale(4),
+    marginTop: verticalScale(2),
+  },
+  apiTrackRatingText: {
+    color: "#20DF60",
+    fontSize: moderateScale(12),
+    fontWeight: "600",
+  },
+  apiTrackPlayBtn: {
+    width: moderateScale(40),
+    height: moderateScale(40),
+    borderRadius: moderateScale(20),
+    backgroundColor: "#20DF601A",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  apiTeacherSection: {
+    marginTop: verticalScale(28),
+  },
+  apiTeacherSectionTitle: {
+    color: "#F1F5F9",
+    fontSize: moderateScale(18),
+    fontWeight: "bold",
+    paddingHorizontal: scale(16),
+    marginBottom: verticalScale(14),
+  },
+  apiTeacherScroll: {
+    paddingLeft: scale(16),
+    paddingRight: scale(8),
+  },
+  apiTeacherCard: {
+    width: scale(100),
+    alignItems: "center",
+    marginRight: scale(12),
+  },
+  apiTeacherImage: {
+    width: moderateScale(64),
+    height: moderateScale(64),
+    borderRadius: moderateScale(32),
+    borderWidth: 2,
+    borderColor: "#20DF6033",
+  },
+  apiTeacherName: {
+    color: "#F1F5F9",
+    fontSize: moderateScale(13),
+    fontWeight: "600",
+    marginTop: verticalScale(8),
+    textAlign: "center",
+  },
+  apiTeacherRatingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: scale(3),
+    marginTop: verticalScale(3),
+  },
+  apiTeacherRatingText: {
+    color: "#20DF60",
+    fontSize: moderateScale(11),
+    fontWeight: "600",
   },
 
   /* ===== SELF-LOVE STYLES ===== */

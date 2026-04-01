@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   Platform,
+  RefreshControl,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -14,6 +16,7 @@ import Fontisto from "react-native-vector-icons/Fontisto";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { useSelector } from "react-redux";
+import useSounds from "../../hooks/useSounds";
 import { moderateScale, scale, verticalScale } from "../../utility/helpers";
 
 const getGreeting = () => {
@@ -27,11 +30,35 @@ const getGreeting = () => {
   return "Good Evening";
 };
 
+const CATEGORY_ICONS = {
+  Mindfulness: "leaf-outline",
+  Relax: "water-outline",
+  "Nature Sound": "earth-outline",
+  Sleep: "cloudy-night-outline",
+  Breathwork: "fitness-outline",
+  "Quick Reset": "flash-outline",
+  Guided: "compass-outline",
+  Ambient: "musical-notes-outline",
+  Binaural: "headset-outline",
+};
+
+const getCategoryIcon = (catname) => {
+  return CATEGORY_ICONS[catname] || "ellipse-outline";
+};
+
 const HomeScreen = ({ navigation }) => {
   const [greet, setGreet] = useState(getGreeting());
 
   const name = useSelector((state) => state.user.name);
   const profileImage = useSelector((state) => state.user.profileImage);
+  const { allTracks, categories, loading, refetch } = useSounds();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -40,6 +67,16 @@ const HomeScreen = ({ navigation }) => {
 
     return () => clearInterval(interval);
   }, []);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <StatusBar barStyle="light-content" backgroundColor="#112116" />
+        <ActivityIndicator size="large" color="#20DF60" />
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -91,6 +128,15 @@ const HomeScreen = ({ navigation }) => {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#20DF60"
+            colors={["#20DF60"]}
+            progressBackgroundColor="#1a3a25"
+          />
+        }
       >
         {/* feature section */}
         <View style={styles.featuredSection}>
@@ -173,74 +219,39 @@ const HomeScreen = ({ navigation }) => {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.recommendedScroll}
           >
-            <TouchableOpacity
-              style={styles.recommendedCard}
-              onPress={() => navigation.navigate("Player")}
-            >
-              <View style={styles.recommendedImageContainer}>
-                <Image
-                  source={require("../../assest/images/candle-deep-sleep.png")}
-                  style={styles.recommendedImage}
-                  resizeMode="cover"
-                />
-                <View style={styles.recommendedBadge}>
-                  <Text style={styles.recommendedBadgeText}>SLEEP</Text>
+            {allTracks.slice(0, 5).map((track) => (
+              <TouchableOpacity
+                key={track._id}
+                style={styles.recommendedCard}
+                onPress={() => navigation.navigate("Player", { track })}
+              >
+                <View style={styles.recommendedImageContainer}>
+                  <Image
+                    source={{ uri: track.thumbnail }}
+                    style={styles.recommendedImage}
+                    resizeMode="cover"
+                  />
+                  <View style={styles.recommendedBadge}>
+                    <Text style={styles.recommendedBadgeText}>
+                      {track.catname?.toUpperCase()}
+                    </Text>
+                  </View>
                 </View>
-              </View>
-              <Text style={styles.recommendedCardTitle}>Deep Sleep</Text>
-              <View style={styles.recommendedMeta}>
-                <MaterialCommunityIcons
-                  name="clock-time-four-outline"
-                  size={moderateScale(14)}
-                  color="#20DF6099"
-                />
-                <Text style={styles.recommendedDuration}>20 min</Text>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.recommendedCard}>
-              <View style={styles.recommendedImageContainer}>
-                <Image
-                  source={require("../../assest/images/forest-hero.png")}
-                  style={styles.recommendedImage}
-                  resizeMode="cover"
-                />
-                <View style={styles.recommendedBadge}>
-                  <Text style={styles.recommendedBadgeText}>CALM</Text>
+                <Text style={styles.recommendedCardTitle} numberOfLines={1}>
+                  {track.title}
+                </Text>
+                <View style={styles.recommendedMeta}>
+                  <MaterialCommunityIcons
+                    name="clock-time-four-outline"
+                    size={moderateScale(14)}
+                    color="#20DF6099"
+                  />
+                  <Text style={styles.recommendedDuration}>
+                    {track.duration}
+                  </Text>
                 </View>
-              </View>
-              <Text style={styles.recommendedCardTitle}>Inner Peace</Text>
-              <View style={styles.recommendedMeta}>
-                <MaterialCommunityIcons
-                  name="clock-time-four-outline"
-                  size={moderateScale(14)}
-                  color="#20DF6099"
-                />
-                <Text style={styles.recommendedDuration}>15 min</Text>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.recommendedCard}>
-              <View style={styles.recommendedImageContainer}>
-                <Image
-                  source={require("../../assest/images/morning-calm-image.png")}
-                  style={styles.recommendedImage}
-                  resizeMode="cover"
-                />
-                <View style={styles.recommendedBadge}>
-                  <Text style={styles.recommendedBadgeText}>FOCUS</Text>
-                </View>
-              </View>
-              <Text style={styles.recommendedCardTitle}>Morning Calm</Text>
-              <View style={styles.recommendedMeta}>
-                <MaterialCommunityIcons
-                  name="clock-time-four-outline"
-                  size={moderateScale(14)}
-                  color="#20DF6099"
-                />
-                <Text style={styles.recommendedDuration}>12 min</Text>
-              </View>
-            </TouchableOpacity>
+              </TouchableOpacity>
+            ))}
           </ScrollView>
         </View>
 
@@ -250,63 +261,46 @@ const HomeScreen = ({ navigation }) => {
         </View>
 
         <View style={styles.exploreContainer}>
-          <View style={styles.firstSecondContainer}>
-            <TouchableOpacity
-              style={styles.firstContainer}
-              onPress={() =>
-                navigation.navigate("CategoryDetail", { category: "anxiety" })
+          {categories
+            .reduce((rows, category, idx) => {
+              if (idx % 2 === 0) {
+                rows.push([category]);
+              } else {
+                rows[rows.length - 1].push(category);
               }
-            >
-              <Image
-                source={require("../../assest/images/profiling.png")}
-                style={styles.anxietyImage}
-              />
-              <Text style={styles.AnxietyText}>Anxiety</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.firstContainer}
-              onPress={() =>
-                navigation.navigate("CategoryDetail", { category: "zen" })
-              }
-            >
-              <Image
-                source={require("../../assest/images/person-logo.png")}
-                style={styles.anxietyImage}
-              />
-              <Text style={styles.AnxietyText}>Zen</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.thirdFourthContainer}>
-            <TouchableOpacity
-              style={styles.firstContainer}
-              onPress={() =>
-                navigation.navigate("CategoryDetail", { category: "self-love" })
-              }
-            >
-              <Feather
-                name="heart"
-                color="#20DF60"
-                size={24}
-                style={styles.anxietyImage}
-              />
-              <Text style={styles.AnxietyText}>Self-Love</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.firstContainer}
-              onPress={() => navigation.navigate("Sleep")}
-            >
-              <Ionicons
-                name="cloudy-night-outline"
-                color="#20DF60"
-                size={24}
-                style={styles.anxietyImage}
-              />
-              <Text style={styles.AnxietyText}>Sleep</Text>
-            </TouchableOpacity>
-          </View>
+              return rows;
+            }, [])
+            .map((row, rowIdx) => (
+              <View
+                key={rowIdx}
+                style={
+                  rowIdx === 0
+                    ? styles.firstSecondContainer
+                    : styles.thirdFourthContainer
+                }
+              >
+                {row.map((category) => (
+                  <TouchableOpacity
+                    key={category._id}
+                    style={styles.firstContainer}
+                    onPress={() =>
+                      navigation.navigate("CategoryDetail", {
+                        category: category.catname,
+                        categoryData: category,
+                      })
+                    }
+                  >
+                    <Ionicons
+                      name={getCategoryIcon(category.catname)}
+                      color="#20DF60"
+                      size={24}
+                      style={styles.anxietyImage}
+                    />
+                    <Text style={styles.AnxietyText}>{category.catname}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ))}
         </View>
       </ScrollView>
     </View>
@@ -334,8 +328,8 @@ const styles = StyleSheet.create({
     paddingLeft: scale(12),
   },
   avatarStyle: {
-    height: moderateScale(47),
-    width: moderateScale(47),
+    height: moderateScale(50),
+    width: moderateScale(50),
     borderRadius: moderateScale(21),
   },
   greet: {
@@ -613,5 +607,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: scale(10),
     paddingTop: verticalScale(10),
+  },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: "#112116",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    color: "#20DF60",
+    fontSize: moderateScale(14),
+    fontWeight: "600",
+    marginTop: verticalScale(12),
+    letterSpacing: 0.5,
   },
 });

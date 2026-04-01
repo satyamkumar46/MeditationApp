@@ -13,14 +13,6 @@ import Feather from "react-native-vector-icons/Feather";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { scale, verticalScale, moderateScale } from "../../utility/helpers";
 
-const STATS = [
-  { label: "YEARS EXP", value: "15+" },
-  { label: "STUDENTS", value: "12k+" },
-  { label: "SESSIONS", value: "400+" },
-];
-
-const TAGS = ["Zen Meditation", "Mindfulness", "Breathwork"];
-
 const SESSIONS = [
   {
     id: 1,
@@ -38,7 +30,19 @@ const SESSIONS = [
   },
 ];
 
-const TeacherProfileScreen = ({ navigation }) => {
+const TeacherProfileScreen = ({ navigation, route }) => {
+  const teacher = route?.params?.teacher;
+
+  const stats = [
+    { label: "RATING", value: teacher?.rating?.toString() || "N/A" },
+    { label: "STUDENTS", value: teacher?.students || "N/A" },
+    { label: "SESSIONS", value: teacher?.session || "N/A" },
+  ];
+
+  const tags = teacher?.expertise
+    ? teacher.expertise.split(",").map((t) => t.trim())
+    : ["Meditation"];
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
@@ -50,7 +54,11 @@ const TeacherProfileScreen = ({ navigation }) => {
         {/* Hero Section */}
         <View style={styles.heroSection}>
           <Image
-            source={require("../../assest/images/teacher-hero.png")}
+            source={
+              teacher?.image
+                ? { uri: teacher.image }
+                : require("../../assest/images/teacher-hero.png")
+            }
             style={styles.heroImage}
             resizeMode="cover"
           />
@@ -90,28 +98,34 @@ const TeacherProfileScreen = ({ navigation }) => {
           {/* Teacher info */}
           <View style={styles.heroContent}>
             <View style={styles.zenBadge}>
-              <Text style={styles.zenBadgeText}>ZEN MASTER</Text>
+              <Text style={styles.zenBadgeText}>
+                {tags[0]?.toUpperCase() || "MEDITATION"}
+              </Text>
             </View>
-            <Text style={styles.teacherName}>Dr. Aris Thorne</Text>
+            <Text style={styles.teacherName}>
+              {teacher?.name || "Unknown Teacher"}
+            </Text>
             <View style={styles.ratingRow}>
               <Ionicons
                 name="star"
                 size={moderateScale(16)}
                 color="#FBBF24"
               />
-              <Text style={styles.ratingText}>4.9 (2.4k reviews)</Text>
+              <Text style={styles.ratingText}>
+                {teacher?.rating || "N/A"} ({teacher?.reviews || "No reviews"})
+              </Text>
             </View>
           </View>
         </View>
 
         {/* Stats */}
         <View style={styles.statsRow}>
-          {STATS.map((stat, idx) => (
+          {stats.map((stat, idx) => (
             <View
               key={stat.label}
               style={[
                 styles.statCard,
-                idx < STATS.length - 1 && { marginRight: scale(8) },
+                idx < stats.length - 1 && { marginRight: scale(8) },
               ]}
             >
               <Text style={styles.statValue}>{stat.value}</Text>
@@ -144,14 +158,10 @@ const TeacherProfileScreen = ({ navigation }) => {
         <View style={styles.bioSection}>
           <Text style={styles.bioTitle}>Expertise & Bio</Text>
           <Text style={styles.bioText}>
-            Dr. Aris Thorne is a globally recognized pioneer in modern Zen
-            mindfulness. With a PhD in Cognitive Psychology and over a decade of
-            monastic training, he bridges the gap between ancient Eastern wisdom
-            and contemporary neurological science. His sessions focus on
-            achieving deep "lucid stillness" amidst the chaos of digital life.
+            {teacher?.bio || "No bio available for this teacher."}
           </Text>
           <View style={styles.tagsRow}>
-            {TAGS.map((tag) => (
+            {tags.map((tag) => (
               <View key={tag} style={styles.tagChip}>
                 <Text style={styles.tagText}>{tag}</Text>
               </View>

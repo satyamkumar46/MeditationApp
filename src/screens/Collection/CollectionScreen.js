@@ -1,4 +1,5 @@
 import {
+  ActivityIndicator,
   Image,
   Platform,
   ScrollView,
@@ -11,79 +12,20 @@ import {
 } from "react-native";
 import Feather from "react-native-vector-icons/Feather";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import useSounds from "../../hooks/useSounds";
 import { moderateScale, scale, verticalScale } from "../../utility/helpers";
 
-const BEGINNER_CARDS = [
-  {
-    id: 1,
-    title: "Mindful Breath",
-    sessions: "12 Sessions",
-    category: "Guided Meditation",
-    badge: "BEGINNER",
-    image: require("../../assest/images/morning-calm-image.png"),
-    hasPlay: true,
-  },
-  {
-    id: 2,
-    title: "Body Scan Basics",
-    sessions: "8 Sessions",
-    category: "Relaxation",
-    badge: "BEGINNER",
-    image: require("../../assest/images/deep-wood-image.png"),
-    hasPlay: true,
-  },
-];
-
-const INTERMEDIATE_CARDS = [
-  {
-    id: 1,
-    title: "Forest Immersion",
-    sessions: "15 Sessions",
-    category: "Nature Sounds",
-    badge: "INTERMEDIATE",
-    image: require("../../assest/images/forest-hero.png"),
-    hasCta: true,
-    ctaText: "Start Now",
-  },
-  {
-    id: 2,
-    title: "Emotional Balance",
-    sessions: "10 Sessions",
-    category: null,
-    badge: "INTERMEDIATE",
-    image: require("../../assest/images/calm-water-lake.png"),
-    hasCta: false,
-  },
-];
-
-const ADVANCED_ITEMS = [
-  {
-    id: 1,
-    title: "Deep Silence",
-    sessions: "20 SESSIONS",
-    image: require("../../assest/images/evening-wind-image.png"),
-  },
-  {
-    id: 2,
-    title: "The Void",
-    sessions: "14 SESSIONS",
-    image: require("../../assest/images/candle-deep-sleep.png"),
-  },
-  {
-    id: 3,
-    title: "Summit Focus",
-    sessions: "16 SESSIONS",
-    image: require("../../assest/images/mountain-image.png"),
-  },
-  {
-    id: 4,
-    title: "Inner Light",
-    sessions: "15 SESSIONS",
-    image: require("../../assest/images/cozy-image.png"),
-  },
-];
-
 const CollectionScreen = ({ navigation }) => {
+  const { categories, loading } = useSounds();
+
+  if (loading) {
+    return (
+      <View style={styles.loadingScreen}>
+        <ActivityIndicator size="large" color="#20DF60" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#112116" />
@@ -122,117 +64,185 @@ const CollectionScreen = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* ===== BEGINNER FOUNDATIONS ===== */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Beginner Foundations</Text>
-          <TouchableOpacity>
-            <Text style={styles.seeAll}>See all</Text>
+        {/* Featured Category (first category as hero) */}
+        {categories.length > 0 && (
+          <TouchableOpacity
+            style={styles.heroCard}
+            onPress={() =>
+              navigation.navigate("CategoryDetail", {
+                category: categories[0].catname,
+                categoryData: categories[0],
+              })
+            }
+          >
+            <Image
+              source={
+                categories[0].tracks?.[0]?.thumbnail
+                  ? { uri: categories[0].tracks[0].thumbnail }
+                  : require("../../assest/images/morning-calm-image.png")
+              }
+              style={styles.heroImage}
+              resizeMode="cover"
+            />
+            <View style={styles.heroOverlay} />
+            <View style={styles.heroContent}>
+              <View style={styles.badgeContainer}>
+                <Text style={styles.badgeText}>FEATURED</Text>
+              </View>
+              <Text style={styles.heroTitle}>{categories[0].catname}</Text>
+              <Text style={styles.heroMeta}>
+                {categories[0].tracks?.length || 0} Tracks • Curated Collection
+              </Text>
+              <TouchableOpacity style={styles.ctaBtn}>
+                <Feather
+                  name="play"
+                  size={moderateScale(14)}
+                  color="#112116"
+                />
+                <Text style={styles.ctaBtnText}>Explore</Text>
+              </TouchableOpacity>
+            </View>
           </TouchableOpacity>
+        )}
+
+        {/* All Categories Grid */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>All Categories</Text>
+          <Text style={styles.countText}>
+            {categories.length} COLLECTIONS
+          </Text>
         </View>
 
-        {BEGINNER_CARDS.map((card) => (
-          <TouchableOpacity key={card.id} style={styles.wideCard}>
+        {/* Wide cards for first 2 categories */}
+        {categories.slice(1, 3).map((cat) => (
+          <TouchableOpacity
+            key={cat._id}
+            style={styles.wideCard}
+            onPress={() =>
+              navigation.navigate("CategoryDetail", {
+                category: cat.catname,
+                categoryData: cat,
+              })
+            }
+          >
             <Image
-              source={card.image}
+              source={
+                cat.tracks?.[0]?.thumbnail
+                  ? { uri: cat.tracks[0].thumbnail }
+                  : require("../../assest/images/deep-wood-image.png")
+              }
               style={styles.wideCardImage}
               resizeMode="cover"
             />
             <View style={styles.wideCardOverlay} />
             <View style={styles.wideCardContent}>
               <View style={styles.badgeContainer}>
-                <Text style={styles.badgeText}>{card.badge}</Text>
+                <Text style={styles.badgeText}>
+                  {cat.catname.toUpperCase()}
+                </Text>
               </View>
-              <Text style={styles.wideCardTitle}>{card.title}</Text>
+              <Text style={styles.wideCardTitle}>{cat.catname}</Text>
               <Text style={styles.wideCardMeta}>
-                {card.sessions} • {card.category}
+                {cat.tracks?.length || 0} Tracks
               </Text>
             </View>
-            {card.hasPlay && (
-              <TouchableOpacity style={styles.wideCardPlayBtn}>
-                <Feather
-                  name="play"
-                  size={moderateScale(18)}
-                  color="#20DF60"
-                />
-              </TouchableOpacity>
-            )}
-          </TouchableOpacity>
-        ))}
-
-        {/* ===== INTERMEDIATE FLOW ===== */}
-        <View style={[styles.sectionHeader, { marginTop: verticalScale(24) }]}>
-          <Text style={styles.sectionTitle}>Intermediate Flow</Text>
-          <TouchableOpacity>
-            <Text style={styles.seeAll}>See all</Text>
-          </TouchableOpacity>
-        </View>
-
-        {INTERMEDIATE_CARDS.map((card) => (
-          <View key={card.id}>
-            <TouchableOpacity style={styles.tallCard}>
-              <Image
-                source={card.image}
-                style={styles.tallCardImage}
-                resizeMode="cover"
+            <TouchableOpacity style={styles.wideCardPlayBtn}>
+              <Feather
+                name="play"
+                size={moderateScale(18)}
+                color="#20DF60"
               />
-              <View style={styles.tallCardOverlay} />
-              <View style={styles.tallCardContent}>
-                <View style={styles.badgeContainer}>
-                  <Text style={styles.badgeText}>{card.badge}</Text>
-                </View>
-                <Text style={styles.tallCardTitle}>{card.title}</Text>
-                <Text style={styles.tallCardMeta}>
-                  {card.sessions}
-                  {card.category ? ` • ${card.category}` : ""}
-                </Text>
-                {card.hasCta && (
-                  <TouchableOpacity style={styles.ctaBtn}>
-                    <Feather
-                      name="play"
-                      size={moderateScale(14)}
-                      color="#112116"
-                    />
-                    <Text style={styles.ctaBtnText}>{card.ctaText}</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
             </TouchableOpacity>
-
-            {!card.hasCta && (
-              <View style={styles.detachedInfo}>
-                <View style={styles.badgeContainer}>
-                  <Text style={styles.badgeText}>{card.badge}</Text>
-                </View>
-                <Text style={styles.detachedTitle}>{card.title}</Text>
-                <Text style={styles.detachedMeta}>{card.sessions}</Text>
-              </View>
-            )}
-          </View>
+          </TouchableOpacity>
         ))}
 
-        {/* ===== ADVANCED MASTERY ===== */}
-        <View style={[styles.sectionHeader, { marginTop: verticalScale(24) }]}>
-          <Text style={styles.sectionTitle}>Advanced Mastery</Text>
-          <TouchableOpacity>
-            <Text style={styles.seeAll}>See all</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.gridContainer}>
-          {ADVANCED_ITEMS.map((item) => (
-            <TouchableOpacity key={item.id} style={styles.gridCard}>
-              <View style={styles.gridImageContainer}>
-                <Image
-                  source={item.image}
-                  style={styles.gridImage}
-                  resizeMode="cover"
-                />
+        {/* Tall cards for next 2 */}
+        {categories.slice(3, 5).map((cat) => (
+          <TouchableOpacity
+            key={cat._id}
+            style={styles.tallCard}
+            onPress={() =>
+              navigation.navigate("CategoryDetail", {
+                category: cat.catname,
+                categoryData: cat,
+              })
+            }
+          >
+            <Image
+              source={
+                cat.tracks?.[0]?.thumbnail
+                  ? { uri: cat.tracks[0].thumbnail }
+                  : require("../../assest/images/forest-hero.png")
+              }
+              style={styles.tallCardImage}
+              resizeMode="cover"
+            />
+            <View style={styles.tallCardOverlay} />
+            <View style={styles.tallCardContent}>
+              <View style={styles.badgeContainer}>
+                <Text style={styles.badgeText}>
+                  {cat.catname.toUpperCase()}
+                </Text>
               </View>
-              <Text style={styles.gridTitle}>{item.title}</Text>
-              <Text style={styles.gridSessions}>{item.sessions}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+              <Text style={styles.tallCardTitle}>{cat.catname}</Text>
+              <Text style={styles.tallCardMeta}>
+                {cat.tracks?.length || 0} Tracks
+              </Text>
+            </View>
+          </TouchableOpacity>
+        ))}
+
+        {/* Grid cards for remaining */}
+        {categories.length > 5 && (
+          <>
+            <View
+              style={[styles.sectionHeader, { marginTop: verticalScale(24) }]}
+            >
+              <Text style={styles.sectionTitle}>More Collections</Text>
+            </View>
+
+            <View style={styles.gridContainer}>
+              {categories.slice(5).map((cat) => (
+                <TouchableOpacity
+                  key={cat._id}
+                  style={styles.gridCard}
+                  onPress={() =>
+                    navigation.navigate("CategoryDetail", {
+                      category: cat.catname,
+                      categoryData: cat,
+                    })
+                  }
+                >
+                  <View style={styles.gridImageContainer}>
+                    <Image
+                      source={
+                        cat.tracks?.[0]?.thumbnail
+                          ? { uri: cat.tracks[0].thumbnail }
+                          : require("../../assest/images/mountain-image.png")
+                      }
+                      style={styles.gridImage}
+                      resizeMode="cover"
+                    />
+                    <View style={styles.gridOverlay} />
+                    <View style={styles.gridBadge}>
+                      <Feather
+                        name="play"
+                        size={moderateScale(14)}
+                        color="#20DF60"
+                      />
+                    </View>
+                  </View>
+                  <Text style={styles.gridTitle} numberOfLines={1}>
+                    {cat.catname}
+                  </Text>
+                  <Text style={styles.gridSessions}>
+                    {cat.tracks?.length || 0} TRACKS
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </>
+        )}
       </ScrollView>
     </View>
   );
@@ -241,6 +251,12 @@ const CollectionScreen = ({ navigation }) => {
 export default CollectionScreen;
 
 const styles = StyleSheet.create({
+  loadingScreen: {
+    flex: 1,
+    backgroundColor: "#112116",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   container: {
     flex: 1,
     backgroundColor: "#112116",
@@ -288,6 +304,40 @@ const styles = StyleSheet.create({
     paddingBottom: verticalScale(40),
     paddingHorizontal: scale(16),
   },
+
+  /* Hero */
+  heroCard: {
+    borderRadius: moderateScale(16),
+    overflow: "hidden",
+    marginTop: verticalScale(10),
+    marginBottom: verticalScale(10),
+  },
+  heroImage: {
+    width: "100%",
+    height: verticalScale(220),
+  },
+  heroOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(17, 33, 22, 0.45)",
+  },
+  heroContent: {
+    position: "absolute",
+    bottom: verticalScale(16),
+    left: scale(16),
+    right: scale(16),
+  },
+  heroTitle: {
+    color: "#FFFFFF",
+    fontSize: moderateScale(26),
+    fontWeight: "bold",
+    letterSpacing: -0.5,
+  },
+  heroMeta: {
+    color: "#CBD5E1",
+    fontSize: moderateScale(13),
+    marginTop: verticalScale(4),
+  },
+
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -300,13 +350,50 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(20),
     fontWeight: "bold",
   },
-  seeAll: {
+  countText: {
     color: "#20DF60",
-    fontSize: moderateScale(14),
-    fontWeight: "600",
+    fontSize: moderateScale(13),
+    fontWeight: "bold",
+    letterSpacing: 0.5,
   },
 
-  /* ===== WIDE CARDS (Beginner) ===== */
+  /* Badge */
+  badgeContainer: {
+    backgroundColor: "#20DF6033",
+    borderWidth: 1,
+    borderColor: "#20DF6066",
+    paddingHorizontal: scale(8),
+    paddingVertical: verticalScale(2),
+    borderRadius: moderateScale(6),
+    alignSelf: "flex-start",
+    marginBottom: verticalScale(6),
+  },
+  badgeText: {
+    color: "#20DF60",
+    fontSize: moderateScale(9),
+    fontWeight: "bold",
+    letterSpacing: 1.2,
+  },
+
+  /* CTA */
+  ctaBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#20DF60",
+    paddingHorizontal: scale(14),
+    paddingVertical: verticalScale(8),
+    borderRadius: moderateScale(20),
+    alignSelf: "flex-start",
+    marginTop: verticalScale(10),
+    gap: scale(6),
+  },
+  ctaBtnText: {
+    color: "#112116",
+    fontSize: moderateScale(13),
+    fontWeight: "bold",
+  },
+
+  /* Wide Cards */
   wideCard: {
     height: verticalScale(130),
     borderRadius: moderateScale(16),
@@ -327,22 +414,6 @@ const styles = StyleSheet.create({
     bottom: verticalScale(14),
     left: scale(14),
     right: scale(14),
-  },
-  badgeContainer: {
-    backgroundColor: "#20DF6033",
-    borderWidth: 1,
-    borderColor: "#20DF6066",
-    paddingHorizontal: scale(8),
-    paddingVertical: verticalScale(2),
-    borderRadius: moderateScale(6),
-    alignSelf: "flex-start",
-    marginBottom: verticalScale(6),
-  },
-  badgeText: {
-    color: "#20DF60",
-    fontSize: moderateScale(9),
-    fontWeight: "bold",
-    letterSpacing: 1.2,
   },
   wideCardTitle: {
     color: "#FFFFFF",
@@ -368,12 +439,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  /* ===== TALL CARDS (Intermediate) ===== */
+  /* Tall Cards */
   tallCard: {
     height: verticalScale(200),
     borderRadius: moderateScale(16),
     overflow: "hidden",
-    marginBottom: verticalScale(4),
+    marginBottom: verticalScale(12),
     position: "relative",
   },
   tallCardImage: {
@@ -400,38 +471,8 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(12),
     marginTop: verticalScale(2),
   },
-  ctaBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#20DF60",
-    paddingHorizontal: scale(14),
-    paddingVertical: verticalScale(8),
-    borderRadius: moderateScale(20),
-    alignSelf: "flex-start",
-    marginTop: verticalScale(10),
-    gap: scale(6),
-  },
-  ctaBtnText: {
-    color: "#112116",
-    fontSize: moderateScale(13),
-    fontWeight: "bold",
-  },
-  detachedInfo: {
-    paddingVertical: verticalScale(10),
-    marginBottom: verticalScale(8),
-  },
-  detachedTitle: {
-    color: "#F1F5F9",
-    fontSize: moderateScale(17),
-    fontWeight: "bold",
-  },
-  detachedMeta: {
-    color: "#94A3B8",
-    fontSize: moderateScale(12),
-    marginTop: verticalScale(2),
-  },
 
-  /* ===== GRID CARDS (Advanced) ===== */
+  /* Grid Cards */
   gridContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -446,10 +487,28 @@ const styles = StyleSheet.create({
     height: verticalScale(110),
     borderRadius: moderateScale(14),
     overflow: "hidden",
+    position: "relative",
   },
   gridImage: {
     width: "100%",
     height: "100%",
+  },
+  gridOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(17, 33, 22, 0.3)",
+  },
+  gridBadge: {
+    position: "absolute",
+    bottom: moderateScale(8),
+    right: moderateScale(8),
+    width: moderateScale(32),
+    height: moderateScale(32),
+    borderRadius: moderateScale(16),
+    backgroundColor: "#20DF601A",
+    borderWidth: 1,
+    borderColor: "#20DF6066",
+    justifyContent: "center",
+    alignItems: "center",
   },
   gridTitle: {
     color: "#F1F5F9",

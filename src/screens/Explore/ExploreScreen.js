@@ -1,6 +1,9 @@
+import { useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,9 +14,38 @@ import {
 import Feather from "react-native-vector-icons/Feather";
 import Fontisto from "react-native-vector-icons/Fontisto";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import useSounds from "../../hooks/useSounds";
+import useTeachers from "../../hooks/useTeachers";
 import { moderateScale, scale, verticalScale } from "../../utility/helpers";
 
 const ExploreScreen = ({ navigation }) => {
+  const { teachers, loading: teachersLoading, error, refetch: refetchTeachers } = useTeachers();
+  const { allTracks, categories, loading: soundsLoading, refetch: refetchSounds } = useSounds();
+  const [activeTeacherId, setActiveTeacherId] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loading = teachersLoading || soundsLoading;
+
+  const handleTeacherPress = (teacherId) => {
+    setActiveTeacherId(teacherId);
+    const teacher = teachers.find((t) => t._id === teacherId);
+    navigation.navigate("TeacherProfile", { teacher });
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([refetchTeachers?.(), refetchSounds?.()]);
+    setRefreshing(false);
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingScreen}>
+        <ActivityIndicator size="large" color="#20DF60" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       {/* header section */}
@@ -48,6 +80,15 @@ const ExploreScreen = ({ navigation }) => {
       <ScrollView
         showsVerticalScrollIndicator={false}
         style={styles.contentSection}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#20DF60"
+            colors={["#20DF60"]}
+            progressBackgroundColor="#1a3a25"
+          />
+        }
       >
         {/* collection search */}
         <View style={styles.collectionSearchContainer}>
@@ -67,29 +108,40 @@ const ExploreScreen = ({ navigation }) => {
           </View>
 
           {/* card */}
-          <View style={styles.cardContainer}>
-            <View style={styles.cardOneContainer}>
-              <Image
-                source={require("../../assest/images/nature-sounds.avif")}
-                style={styles.ContainerImage}
-              />
-              <View style={styles.cardOverlay} />
-              <View style={styles.cardTextContainer}>
-                <Text style={styles.cardText}>Nature Sounds</Text>
-              </View>
-            </View>
-
-            <View style={styles.cardOneContainer}>
-              <Image
-                source={require("../../assest/images/stress.avif")}
-                style={styles.ContainerImage}
-              />
-              <View style={styles.cardOverlay} />
-              <View style={styles.cardTextContainer}>
-                <Text style={styles.cardText}>Stress Relief</Text>
-              </View>
-            </View>
-          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.cardContainer}
+          >
+            {categories.slice(0, 4).map((cat) => (
+              <TouchableOpacity
+                key={cat._id}
+                style={styles.cardOneContainer}
+                onPress={() =>
+                  navigation.navigate("CategoryDetail", {
+                    category: cat.catname,
+                    categoryData: cat,
+                  })
+                }
+              >
+                <Image
+                  source={
+                    cat.tracks?.[0]?.thumbnail
+                      ? { uri: cat.tracks[0].thumbnail }
+                      : require("../../assest/images/nature-sounds.avif")
+                  }
+                  style={styles.ContainerImage}
+                />
+                <View style={styles.cardOverlay} />
+                <View style={styles.cardTextContainer}>
+                  <Text style={styles.cardText}>{cat.catname}</Text>
+                  <Text style={styles.cardTrackCount}>
+                    {cat.tracks?.length || 0} tracks
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
 
           {/* top teachers */}
           <View style={styles.topTeachersContainer}>
@@ -113,65 +165,44 @@ const ExploreScreen = ({ navigation }) => {
               horizontal={true}
               style={styles.teachersContainer}
             >
-              <Pressable
-                style={styles.firstFrame}
-                onPress={() => navigation.navigate("TeacherProfile")}
-              >
-                <View style={styles.firstCircle}>
-                  <View style={styles.secondCircle}>
-                    <Image
-                      source={require("../../assest/images/first-Teacher-Img.png")}
-                      style={styles.firstTeacherImage}
-                    />
-                  </View>
+              {error ? (
+                <View style={styles.teacherLoadingContainer}>
+                  <Text style={styles.teacherErrorText}>
+                    Failed to load teachers
+                  </Text>
                 </View>
+              ) : (
+                teachers.slice(0, 5).map((teacher) => {
+                  const isActive = activeTeacherId === teacher._id;
+                  return (
+                    <Pressable
+                      key={teacher._id}
+                      style={styles.teacherFrame}
+                      onPress={() => handleTeacherPress(teacher._id)}
+                    >
+                      <View
+                        style={[
+                          styles.teacherCircle,
+                          isActive && styles.teacherCircleActive,
+                        ]}
+                      >
+                        <View style={styles.teacherImageWrapper}>
+                          <Image
+                            source={{ uri: teacher.image }}
+                            style={styles.teacherImage}
+                          />
+                        </View>
+                      </View>
 
-                <View style={styles.teacherNameContainer}>
-                  <Text style={styles.teacherName}>Elena Joy</Text>
-                </View>
-              </Pressable>
-
-              {/* second teacher */}
-              <View style={styles.firstFrame}>
-                <View style={styles.secondCircleOther}>
-                  <Image
-                    source={require("../../assest/images/Second-Teacher-Img.png")}
-                    style={styles.otherTeacherImage}
-                  />
-                </View>
-
-                <View style={styles.othersteacherNameContainer}>
-                  <Text style={styles.teacherName}>Marcus T.</Text>
-                </View>
-              </View>
-
-              {/* third teacher */}
-              <View style={styles.firstFrame}>
-                <View style={styles.secondCircleOther}>
-                  <Image
-                    source={require("../../assest/images/third-teacher-image.png")}
-                    style={styles.otherTeacherImage}
-                  />
-                </View>
-
-                <View style={styles.othersteacherNameContainer}>
-                  <Text style={styles.teacherName}>Sarah K.</Text>
-                </View>
-              </View>
-
-              {/* fourth teacher */}
-              <View style={styles.firstFrame}>
-                <View style={styles.secondCircleOther}>
-                  <Image
-                    source={require("../../assest/images/fourth-teacher-img.png")}
-                    style={styles.otherTeacherImage}
-                  />
-                </View>
-
-                <View style={styles.othersteacherNameContainer}>
-                  <Text style={styles.teacherName}>Dr. David</Text>
-                </View>
-              </View>
+                      <View style={styles.teacherNameContainer}>
+                        <Text style={styles.teacherName} numberOfLines={1}>
+                          {teacher.name}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  );
+                })
+              )}
             </ScrollView>
           </View>
         </View>
@@ -183,115 +214,44 @@ const ExploreScreen = ({ navigation }) => {
             <Text style={styles.newArrivalText}>New Arrival</Text>
           </View>
 
-          {/* song-1 */}
-          <View style={styles.songContainer}>
-            <View style={styles.songInsideContainer}>
-              {/* image */}
-              <View style={styles.songInsideSecondContainer}>
-                <View style={styles.songOneImgContainer}>
-                  <Image
-                    source={require("../../assest/images/song-1-img.png")}
-                    style={styles.songOneImg}
-                  />
-                </View>
-
-                {/* text */}
-                <View style={styles.arrivalInsideTextContainer}>
-                  <View style={styles.mindMorningContainer}>
-                    <Text style={styles.mindMorningText}>Mindful Mornings</Text>
+          {allTracks.slice(0, 5).map((track) => (
+            <TouchableOpacity
+              key={track._id}
+              style={styles.songContainer}
+              onPress={() => navigation.navigate("Player", { track })}
+            >
+              <View style={styles.songInsideContainer}>
+                <View style={styles.songInsideSecondContainer}>
+                  <View style={styles.songOneImgContainer}>
+                    <Image
+                      source={{ uri: track.thumbnail }}
+                      style={styles.songOneImg}
+                    />
                   </View>
 
-                  <View style={styles.timerContainer}>
-                    <Text style={styles.time}>12 min</Text>
-                    <View style={styles.activebtn}></View>
-                    <Text style={styles.guide}>Guided</Text>
-                  </View>
-                </View>
+                  <View style={styles.arrivalInsideTextContainer}>
+                    <View style={styles.mindMorningContainer}>
+                      <Text style={styles.mindMorningText} numberOfLines={1}>
+                        {track.title}
+                      </Text>
+                    </View>
 
-                {/* play btn */}
-                <View style={styles.songPlayBtnContainer}>
-                  <View style={styles.songCirclePtrn}>
-                    <Feather name="play" color="#20DF60" size={24} />
-                  </View>
-                </View>
-              </View>
-            </View>
-          </View>
-
-          {/* song -2  */}
-
-          <View style={styles.songContainer}>
-            <View style={styles.songInsideContainer}>
-              {/* image */}
-              <View style={styles.songInsideSecondContainer}>
-                <View style={styles.songOneImgContainer}>
-                  <Image
-                    source={require("../../assest/images/song-2-img.png")}
-                    style={styles.songOneImg}
-                  />
-                </View>
-
-                {/* text */}
-                <View style={styles.arrivalInsideTextContainer}>
-                  <View style={styles.mindMorningContainer}>
-                    <Text style={styles.mindMorningText}>
-                      Deep Sleep Voyage
-                    </Text>
+                    <View style={styles.timerContainer}>
+                      <Text style={styles.time}>{track.duration}</Text>
+                      <View style={styles.activebtn} />
+                      <Text style={styles.guide}>{track.catname}</Text>
+                    </View>
                   </View>
 
-                  <View style={styles.timerContainer}>
-                    <Text style={styles.time}>45 min</Text>
-                    <View style={styles.activebtn}></View>
-                    <Text style={styles.guide}>Ambient</Text>
-                  </View>
-                </View>
-
-                {/* play btn */}
-                <View style={styles.songPlayBtnContainer}>
-                  <View style={styles.songCirclePtrn}>
-                    <Feather name="play" color="#20DF60" size={24} />
+                  <View style={styles.songPlayBtnContainer}>
+                    <View style={styles.songCirclePtrn}>
+                      <Feather name="play" color="#20DF60" size={24} />
+                    </View>
                   </View>
                 </View>
               </View>
-            </View>
-          </View>
-
-          {/* song-3 */}
-          <View style={styles.songContainer}>
-            <View style={styles.songInsideContainer}>
-              {/* image */}
-              <View style={styles.songInsideSecondContainer}>
-                <View style={styles.songOneImgContainer}>
-                  <Image
-                    source={require("../../assest/images/song-3-img.png")}
-                    style={styles.songOneImg}
-                  />
-                </View>
-
-                {/* text */}
-                <View style={styles.arrivalInsideTextContainer}>
-                  <View style={styles.mindMorningContainer}>
-                    <Text style={styles.mindMorningText}>
-                      Anxiety Relief Beta
-                    </Text>
-                  </View>
-
-                  <View style={styles.timerContainer}>
-                    <Text style={styles.time}>12 min</Text>
-                    <View style={styles.activebtn}></View>
-                    <Text style={styles.guide}>Binaural</Text>
-                  </View>
-                </View>
-
-                {/* play btn */}
-                <View style={styles.songPlayBtnContainer}>
-                  <TouchableOpacity style={styles.songCirclePtrn}>
-                    <Feather name="play" color="#20DF60" size={24} />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          </View>
+            </TouchableOpacity>
+          ))}
         </View>
       </ScrollView>
     </View>
@@ -301,6 +261,12 @@ const ExploreScreen = ({ navigation }) => {
 export default ExploreScreen;
 
 const styles = StyleSheet.create({
+  loadingScreen: {
+    flex: 1,
+    backgroundColor: "#112116",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   container: {
     flex: 1,
     backgroundColor: "#112116",
@@ -411,6 +377,12 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(15),
     fontWeight: "bold",
   },
+  cardTrackCount: {
+    color: "#20DF60",
+    fontSize: moderateScale(11),
+    fontWeight: "600",
+    marginTop: verticalScale(2),
+  },
   topTeachersContainer: {
     marginTop: verticalScale(30),
     marginHorizontal: scale(16),
@@ -444,26 +416,48 @@ const styles = StyleSheet.create({
     marginHorizontal: scale(-16),
     marginTop: verticalScale(10),
   },
-  firstFrame: {
-    height: verticalScale(113),
-    width: scale(100),
-    marginHorizontal: scale(15),
-  },
-  firstCircle: {
-    borderWidth: 3,
-    height: verticalScale(100),
-    width: scale(100),
-    borderColor: "#20DF60",
-    borderRadius: moderateScale(55),
-  },
-  secondCircle: {
-    height: verticalScale(95),
+  teacherLoadingContainer: {
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    width: scale(350),
+    height: verticalScale(100),
   },
-  firstTeacherImage: {
-    height: verticalScale(85),
-    width: scale(85),
+  teacherErrorText: {
+    color: "#FF6B6B",
+    fontSize: moderateScale(13),
+  },
+  teacherFrame: {
+    height: verticalScale(110),
+    width: scale(90),
+    marginHorizontal: scale(15),
+    alignItems: "center",
+  },
+  teacherCircle: {
+    height: verticalScale(80),
+    width: scale(80),
+    borderRadius: moderateScale(55),
+    borderWidth: 3,
+    borderColor: "transparent",
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
+  },
+  teacherCircleActive: {
+    borderColor: "#20DF60",
+  },
+  teacherImageWrapper: {
+    height: verticalScale(80),
+    width: scale(80),
+    borderRadius: moderateScale(50),
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
+  },
+  teacherImage: {
+    height: verticalScale(80),
+    width: scale(80),
+    resizeMode: "cover",
   },
   teacherNameContainer: {
     marginTop: verticalScale(12),
@@ -471,27 +465,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   teacherName: {
-    fontSize: moderateScale(20),
+    fontSize: moderateScale(18),
     fontWeight: "medium",
     color: "#F1F5F9",
   },
-  secondCircleOther: {
-    height: verticalScale(95),
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  otherTeacherImage: {
-    height: verticalScale(100),
-    width: scale(100),
-  },
-  othersteacherNameContainer: {
-    marginTop: verticalScale(16),
-    height: verticalScale(30),
-    alignItems: "center",
-  },
   newArrivalContainer: {
     marginTop: verticalScale(10),
-    height: verticalScale(340),
+    paddingBottom: verticalScale(20),
   },
   newArrivalTextContainer: {
     height: verticalScale(35),

@@ -1,4 +1,5 @@
 import {
+  ActivityIndicator,
   Image,
   Platform,
   ScrollView,
@@ -9,53 +10,22 @@ import {
   View,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import Feather from "react-native-vector-icons/Feather";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import useSounds from "../../hooks/useSounds";
 import { scale, verticalScale, moderateScale } from "../../utility/helpers";
 
-const SESSIONS = [
-  {
-    id: 1,
-    title: "Deep Focus",
-    duration: "15 min",
-    category: "Deep Work Beats",
-    tag: "FOCUS",
-    image: require("../../assest/images/morning-calm-image.png"),
-  },
-  {
-    id: 2,
-    title: "Ocean Breathing",
-    duration: "10 min",
-    category: "Breathwork",
-    tag: "REST",
-    image: require("../../assest/images/mountain-image.png"),
-  },
-  {
-    id: 3,
-    title: "Restorative Flow",
-    duration: "20 min",
-    category: "Mindful Movement",
-    tag: "ZEN",
-    image: require("../../assest/images/cozy-image.png"),
-  },
-  {
-    id: 4,
-    title: "Grounding Roots",
-    duration: "8 min",
-    category: "Quick Reset",
-    tag: "STABILITY",
-    image: require("../../assest/images/deep-wood-image.png"),
-  },
-  {
-    id: 5,
-    title: "Ethereal Morning",
-    duration: "18 min",
-    category: "Ambient Journey",
-    tag: "SPIRIT",
-    image: require("../../assest/images/evening-wind-image.png"),
-  },
-];
-
 const RecommendedScreen = ({ navigation }) => {
+  const { allTracks, categories, loading, error } = useSounds();
+
+  if (loading) {
+    return (
+      <View style={styles.loadingScreen}>
+        <ActivityIndicator size="large" color="#20DF60" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#112116" />
@@ -76,43 +46,107 @@ const RecommendedScreen = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
       >
         {/* Hero Card */}
-        <View style={styles.heroCard}>
-          <Image
-            source={require("../../assest/images/forest-hero.png")}
-            style={styles.heroImage}
-            resizeMode="cover"
-          />
-          <View style={styles.heroOverlay} />
-          <View style={styles.heroContent}>
-            <View style={styles.dailyFocusBadge}>
-              <Text style={styles.dailyFocusText}>DAILY FOCUS</Text>
-            </View>
-            <Text style={styles.heroTitle}>Morning Stillness</Text>
-            <Text style={styles.heroSubtitle}>12 min • Guided Meditation</Text>
-          </View>
-        </View>
-
-        {/* Session List */}
-        <View style={styles.sessionList}>
-          {SESSIONS.map((session) => (
-            <TouchableOpacity key={session.id} style={styles.sessionCard}>
-              <Image source={session.image} style={styles.sessionImage} />
-              <View style={styles.sessionInfo}>
-                <Text style={styles.sessionTitle}>{session.title}</Text>
-                <Text style={styles.sessionMeta}>
-                  {session.duration} • {session.category}
-                </Text>
+        {allTracks.length > 0 && (
+          <TouchableOpacity
+            style={styles.heroCard}
+            onPress={() =>
+              navigation.navigate("Player", { track: allTracks[0] })
+            }
+          >
+            <Image
+              source={{ uri: allTracks[0].thumbnail }}
+              style={styles.heroImage}
+              resizeMode="cover"
+            />
+            <View style={styles.heroOverlay} />
+            <View style={styles.heroContent}>
+              <View style={styles.dailyFocusBadge}>
+                <Text style={styles.dailyFocusText}>DAILY FOCUS</Text>
               </View>
-              <View style={styles.sessionRight}>
-                <Text style={styles.sessionTag}>{session.tag}</Text>
-                <Ionicons
-                  name="chevron-forward"
-                  size={moderateScale(20)}
-                  color="#20DF60"
-                />
+              <Text style={styles.heroTitle}>{allTracks[0].title}</Text>
+              <Text style={styles.heroSubtitle}>
+                {allTracks[0].duration} • {allTracks[0].catname}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
+
+        {/* Category Filter */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoryFilter}
+        >
+          {categories.map((cat) => (
+            <TouchableOpacity key={cat._id} style={styles.categoryChip}>
+              <Text style={styles.categoryChipText}>{cat.catname}</Text>
+              <View style={styles.categoryChipCount}>
+                <Text style={styles.categoryChipCountText}>
+                  {cat.tracks?.length || 0}
+                </Text>
               </View>
             </TouchableOpacity>
           ))}
+        </ScrollView>
+
+        {/* Session List */}
+        <View style={styles.sessionList}>
+          {error ? (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>Failed to load sounds</Text>
+            </View>
+          ) : (
+            allTracks.map((track) => (
+              <TouchableOpacity
+                key={track._id}
+                style={styles.sessionCard}
+                onPress={() =>
+                  navigation.navigate("Player", { track })
+                }
+              >
+                <Image
+                  source={{ uri: track.thumbnail }}
+                  style={styles.sessionImage}
+                />
+                <View style={styles.sessionInfo}>
+                  <Text style={styles.sessionTitle} numberOfLines={1}>
+                    {track.title}
+                  </Text>
+                  <Text style={styles.sessionMeta}>
+                    {track.duration} • {track.catname}
+                  </Text>
+                  {track.teacher && (
+                    <View style={styles.teacherRow}>
+                      <Image
+                        source={{ uri: track.teacher.image }}
+                        style={styles.teacherMiniAvatar}
+                      />
+                      <Text style={styles.teacherMiniName}>
+                        {track.teacher.name}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+                <View style={styles.sessionRight}>
+                  <Text style={styles.sessionTag}>
+                    {track.catname?.substring(0, 5).toUpperCase()}
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.playIconBtn}
+                    onPress={() =>
+                      navigation.navigate("Player", { track })
+                    }
+                  >
+                    <Feather
+                      name="play"
+                      size={moderateScale(16)}
+                      color="#20DF60"
+                    />
+                  </TouchableOpacity>
+                </View>
+              </TouchableOpacity>
+            ))
+          )}
         </View>
       </ScrollView>
     </View>
@@ -122,6 +156,12 @@ const RecommendedScreen = ({ navigation }) => {
 export default RecommendedScreen;
 
 const styles = StyleSheet.create({
+  loadingScreen: {
+    flex: 1,
+    backgroundColor: "#112116",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   container: {
     flex: 1,
     backgroundColor: "#112116",
@@ -196,10 +236,51 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(14),
     marginTop: verticalScale(4),
   },
-  sessionList: {
-    marginTop: verticalScale(24),
+  categoryFilter: {
     paddingHorizontal: scale(16),
-    gap: verticalScale(6),
+    paddingVertical: verticalScale(16),
+    gap: scale(8),
+  },
+  categoryChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#20DF600D",
+    borderWidth: 1,
+    borderColor: "#20DF6033",
+    paddingHorizontal: scale(14),
+    paddingVertical: verticalScale(8),
+    borderRadius: moderateScale(20),
+    gap: scale(8),
+  },
+  categoryChipText: {
+    color: "#F1F5F9",
+    fontSize: moderateScale(13),
+    fontWeight: "500",
+  },
+  categoryChipCount: {
+    backgroundColor: "#20DF601A",
+    width: moderateScale(22),
+    height: moderateScale(22),
+    borderRadius: moderateScale(11),
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  categoryChipCountText: {
+    color: "#20DF60",
+    fontSize: moderateScale(11),
+    fontWeight: "bold",
+  },
+  sessionList: {
+    paddingHorizontal: scale(16),
+    gap: verticalScale(4),
+  },
+  errorContainer: {
+    paddingVertical: verticalScale(20),
+    alignItems: "center",
+  },
+  errorText: {
+    color: "#FF6B6B",
+    fontSize: moderateScale(14),
   },
   sessionCard: {
     flexDirection: "row",
@@ -211,7 +292,7 @@ const styles = StyleSheet.create({
   sessionImage: {
     width: moderateScale(56),
     height: moderateScale(56),
-    borderRadius: moderateScale(28),
+    borderRadius: moderateScale(10),
   },
   sessionInfo: {
     flex: 1,
@@ -228,15 +309,38 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(13),
     marginTop: verticalScale(2),
   },
-  sessionRight: {
+  teacherRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: scale(8),
+    gap: scale(6),
+    marginTop: verticalScale(4),
+  },
+  teacherMiniAvatar: {
+    width: moderateScale(18),
+    height: moderateScale(18),
+    borderRadius: moderateScale(9),
+  },
+  teacherMiniName: {
+    color: "#94A3B8",
+    fontSize: moderateScale(11),
+    fontWeight: "500",
+  },
+  sessionRight: {
+    alignItems: "center",
+    gap: verticalScale(6),
   },
   sessionTag: {
     color: "#20DF60",
-    fontSize: moderateScale(12),
+    fontSize: moderateScale(10),
     fontWeight: "bold",
     letterSpacing: 1,
+  },
+  playIconBtn: {
+    width: moderateScale(34),
+    height: moderateScale(34),
+    borderRadius: moderateScale(17),
+    backgroundColor: "#20DF601A",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
