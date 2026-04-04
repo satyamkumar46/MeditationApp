@@ -175,7 +175,7 @@ const EditProfileScreen = ({ navigation }) => {
                   ? { uri: selectedImage }
                   : profileImage
                     ? { uri: profileImage }
-                    : require("../../assest/images/face.jpg")
+                    : require("../../../assets/images/face.jpg")
               }
               style={styles.avatar}
             />

@@ -105,7 +105,7 @@ const LibraryScreen = ({ navigation }) => {
         source={
           item.thumbnail
             ? { uri: item.thumbnail }
-            : require("../../assest/images/meditation-forest.png")
+            : require("../../../assets/images/loader.png")
         }
         style={styles.sessionImage}
       />

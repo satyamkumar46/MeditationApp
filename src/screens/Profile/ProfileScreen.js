@@ -12,9 +12,11 @@ import {
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import { useSelector } from "react-redux";
-import { moderateScale, scale, verticalScale } from "../../utility/helpers";
+import { useDispatch, useSelector } from "react-redux";
+import { setStreakData } from "../../features/slices/userSlice";
 import { fetchStreak } from "../../services/streakService";
+import { moderateScale, scale, verticalScale } from "../../utility/helpers";
+import { supabase } from "../../utility/supabase";
 
 const MENU_ITEMS = [
   {
@@ -48,27 +50,31 @@ const formatNumber = (num) => {
 const ProfileScreen = ({ navigation }) => {
   const name = useSelector((state) => state.user.name);
   const profileImage = useSelector((state) => state.user.profileImage);
+  const streakCount = useSelector((state) => state.user.streakCount);
+  const totalSessions = useSelector((state) => state.user.totalSessions);
+  const totalMinutes = useSelector((state) => state.user.totalMinutes);
+  const dispatch = useDispatch();
 
-  const [stats, setStats] = useState([
-    { label: "SESSIONS", value: "—" },
-    { label: "MINUTES", value: "—" },
-    { label: "STREAK", value: "—" },
-  ]);
   const [loadingStats, setLoadingStats] = useState(true);
+
+  const stats = [
+    { label: "SESSIONS", value: formatNumber(totalSessions) },
+    { label: "MINUTES", value: formatNumber(totalMinutes) },
+    { label: "STREAK", value: `${streakCount}d` },
+  ];
 
   useEffect(() => {
     const loadStats = async () => {
       try {
         setLoadingStats(true);
         const data = await fetchStreak();
-        setStats([
-          { label: "SESSIONS", value: formatNumber(data.total_sessions || 0) },
-          { label: "MINUTES", value: formatNumber(data.total_minutes || 0) },
-          {
-            label: "STREAK",
-            value: `${data.streak_count || 0}d`,
-          },
-        ]);
+        dispatch(
+          setStreakData({
+            streakCount: data.streak_count || 0,
+            totalSessions: data.total_sessions || 0,
+            totalMinutes: data.total_minutes || 0,
+          })
+        );
       } catch (err) {
         console.error("Error loading profile stats:", err);
       } finally {
@@ -77,6 +83,10 @@ const ProfileScreen = ({ navigation }) => {
     };
     loadStats();
   }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
 
   return (
     <View style={styles.container}>
@@ -115,7 +125,7 @@ const ProfileScreen = ({ navigation }) => {
               source={
                 profileImage
                   ? { uri: profileImage }
-                  : require("../../assest/images/face.jpg")
+                  : require("../../../assets/images/face.jpg")
               }
               style={styles.avatar}
             />
@@ -136,7 +146,11 @@ const ProfileScreen = ({ navigation }) => {
             >
               <Text style={styles.statLabel}>{stat.label}</Text>
               {loadingStats ? (
-                <ActivityIndicator size="small" color="#20DF60" style={{ marginTop: verticalScale(6) }} />
+                <ActivityIndicator
+                  size="small"
+                  color="#20DF60"
+                  style={{ marginTop: verticalScale(6) }}
+                />
               ) : (
                 <Text style={styles.statValue}>{stat.value}</Text>
               )}
@@ -182,10 +196,7 @@ const ProfileScreen = ({ navigation }) => {
         </View>
 
         {/* Log Out */}
-        <TouchableOpacity
-          style={styles.logoutBtn}
-          onPress={() => navigation.navigate("Sign In")}
-        >
+        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
           <View style={styles.logoutIconContainer}>
             <MaterialCommunityIcons
               name="logout"

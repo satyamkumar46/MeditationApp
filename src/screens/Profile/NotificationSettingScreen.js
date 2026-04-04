@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import { scale, verticalScale, moderateScale } from "../../utility/helpers";
+import { moderateScale, scale, verticalScale } from "../../utility/helpers";
 
 const NotificationSettingScreen = ({ navigation }) => {
   const [pushNotifications, setPushNotifications] = useState(false);
@@ -52,7 +52,9 @@ const NotificationSettingScreen = ({ navigation }) => {
 
         {/* Push Notifications */}
         <View style={styles.settingRow}>
-          <View style={[styles.iconContainer, { backgroundColor: "#20DF601A" }]}>
+          <View
+            style={[styles.iconContainer, { backgroundColor: "#20DF601A" }]}
+          >
             <Ionicons
               name="notifications"
               size={moderateScale(20)}
@@ -76,7 +78,9 @@ const NotificationSettingScreen = ({ navigation }) => {
 
         {/* New Content Alerts */}
         <View style={styles.settingRow}>
-          <View style={[styles.iconContainer, { backgroundColor: "#20DF601A" }]}>
+          <View
+            style={[styles.iconContainer, { backgroundColor: "#20DF601A" }]}
+          >
             <MaterialCommunityIcons
               name="checkbox-marked"
               size={moderateScale(20)}
@@ -98,48 +102,6 @@ const NotificationSettingScreen = ({ navigation }) => {
           />
         </View>
 
-        {/* Mindfulness Practice Section */}
-        <Text style={[styles.sectionTitle, { marginTop: verticalScale(24) }]}>
-          MINDFULNESS PRACTICE
-        </Text>
-
-        {/* Daily Reminders */}
-        <View style={styles.settingRow}>
-          <View style={[styles.iconContainer, { backgroundColor: "#20DF601A" }]}>
-            <Ionicons
-              name="time"
-              size={moderateScale(20)}
-              color="#20DF60"
-            />
-          </View>
-          <View style={styles.settingTextContainer}>
-            <Text style={styles.settingLabel}>Daily Reminders</Text>
-            <Text style={styles.settingDescription}>
-              Consistency is key to mindfulness
-            </Text>
-          </View>
-          <Switch
-            value={dailyReminders}
-            onValueChange={setDailyReminders}
-            trackColor={{ false: "#1a3a25", true: "#20DF60" }}
-            thumbColor="#F1F5F9"
-            ios_backgroundColor="#1a3a25"
-          />
-        </View>
-
-        {/* Daily At row */}
-        {dailyReminders && (
-          <View style={styles.subSettingRow}>
-            <Ionicons
-              name="time-outline"
-              size={moderateScale(18)}
-              color="#F1F5F966"
-            />
-            <Text style={styles.subSettingLabel}>Daily at</Text>
-            <Text style={styles.subSettingValue}>{reminderTime}</Text>
-          </View>
-        )}
-
         {/* Preferences Section */}
         <Text style={[styles.sectionTitle, { marginTop: verticalScale(24) }]}>
           PREFERENCES
@@ -147,12 +109,10 @@ const NotificationSettingScreen = ({ navigation }) => {
 
         {/* Quiet Hours */}
         <View style={styles.settingRow}>
-          <View style={[styles.iconContainer, { backgroundColor: "#20DF601A" }]}>
-            <Ionicons
-              name="moon"
-              size={moderateScale(20)}
-              color="#20DF60"
-            />
+          <View
+            style={[styles.iconContainer, { backgroundColor: "#20DF601A" }]}
+          >
+            <Ionicons name="moon" size={moderateScale(20)} color="#20DF60" />
           </View>
           <View style={styles.settingTextContainer}>
             <Text style={styles.settingLabel}>Quiet Hours</Text>
@@ -182,6 +142,24 @@ const NotificationSettingScreen = ({ navigation }) => {
             />
           </TouchableOpacity>
         </View>
+
+        {/* Manage Reminders Link */}
+        <TouchableOpacity
+          style={styles.manageBtn}
+          onPress={() => navigation.navigate("Remainder")}
+        >
+          <Ionicons
+            name="calendar-outline"
+            size={moderateScale(20)}
+            color="#20DF60"
+          />
+          <Text style={styles.manageBtnText}>Manage Reminders</Text>
+          <Ionicons
+            name="chevron-forward"
+            size={moderateScale(18)}
+            color="#F1F5F966"
+          />
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -295,5 +273,23 @@ const styles = StyleSheet.create({
     borderRadius: moderateScale(18),
     justifyContent: "center",
     alignItems: "center",
+  },
+  manageBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#0D3320",
+    borderRadius: moderateScale(14),
+    borderWidth: 1,
+    borderColor: "#20DF6033",
+    paddingVertical: verticalScale(16),
+    paddingHorizontal: scale(16),
+    marginTop: verticalScale(24),
+    gap: scale(12),
+  },
+  manageBtnText: {
+    flex: 1,
+    color: "#F1F5F9",
+    fontSize: moderateScale(15),
+    fontWeight: "600",
   },
 });

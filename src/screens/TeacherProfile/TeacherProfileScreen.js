@@ -1,4 +1,5 @@
 import {
+  ActivityIndicator,
   Image,
   Platform,
   ScrollView,
@@ -8,30 +9,21 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Ionicons from "react-native-vector-icons/Ionicons";
 import Feather from "react-native-vector-icons/Feather";
+import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import { scale, verticalScale, moderateScale } from "../../utility/helpers";
-
-const SESSIONS = [
-  {
-    id: 1,
-    title: "Morning Stillness",
-    meta: "Guided • Foundational Zen",
-    duration: "12 MIN",
-    image: require("../../assest/images/forest-hero.png"),
-  },
-  {
-    id: 2,
-    title: "Zen Focus",
-    meta: "Deep Work • Mental Clarity",
-    duration: "18 MIN",
-    image: require("../../assest/images/zen-stones.png"),
-  },
-];
+import useSounds from "../../hooks/useSounds";
+import { moderateScale, scale, verticalScale } from "../../utility/helpers";
 
 const TeacherProfileScreen = ({ navigation, route }) => {
   const teacher = route?.params?.teacher;
+  const { allTracks, loading: tracksLoading } = useSounds();
+
+  // Filter tracks that belong to this teacher (by matching teacher name)
+  const teacherTracks = allTracks.filter(
+    (track) =>
+      track.teacher?.name?.toLowerCase() === teacher?.name?.toLowerCase()
+  );
 
   const stats = [
     { label: "RATING", value: teacher?.rating?.toString() || "N/A" },
@@ -45,7 +37,11 @@ const TeacherProfileScreen = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="transparent"
+        translucent
+      />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -57,7 +53,7 @@ const TeacherProfileScreen = ({ navigation, route }) => {
             source={
               teacher?.image
                 ? { uri: teacher.image }
-                : require("../../assest/images/teacher-hero.png")
+                : require("../../../assets/images/loader.png")
             }
             style={styles.heroImage}
             resizeMode="cover"
@@ -106,11 +102,7 @@ const TeacherProfileScreen = ({ navigation, route }) => {
               {teacher?.name || "Unknown Teacher"}
             </Text>
             <View style={styles.ratingRow}>
-              <Ionicons
-                name="star"
-                size={moderateScale(16)}
-                color="#FBBF24"
-              />
+              <Ionicons name="star" size={moderateScale(16)} color="#FBBF24" />
               <Text style={styles.ratingText}>
                 {teacher?.rating || "N/A"} ({teacher?.reviews || "No reviews"})
               </Text>
@@ -178,30 +170,139 @@ const TeacherProfileScreen = ({ navigation, route }) => {
             </TouchableOpacity>
           </View>
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.sessionsScroll}
-          >
-            {SESSIONS.map((session) => (
-              <TouchableOpacity key={session.id} style={styles.sessionCard}>
-                <View style={styles.sessionImageContainer}>
-                  <Image
-                    source={session.image}
-                    style={styles.sessionImage}
-                    resizeMode="cover"
-                  />
-                  <View style={styles.sessionDurationBadge}>
-                    <Text style={styles.sessionDurationText}>
-                      {session.duration}
+          {tracksLoading ? (
+            <View style={styles.sessionsLoadingContainer}>
+              <ActivityIndicator size="small" color="#20DF60" />
+              <Text style={styles.sessionsLoadingText}>Loading sessions...</Text>
+            </View>
+          ) : teacherTracks.length > 0 ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.sessionsScroll}
+            >
+              {teacherTracks.map((track) => (
+                <TouchableOpacity
+                  key={track._id}
+                  style={styles.sessionCard}
+                  onPress={() => navigation.navigate("Player", { track })}
+                >
+                  <View style={styles.sessionImageContainer}>
+                    <Image
+                      source={
+                        track.thumbnail
+                          ? { uri: track.thumbnail }
+                          : require("../../../assets/images/loader.png")
+                      }
+                      style={styles.sessionImage}
+                      resizeMode="cover"
+                    />
+                    <View style={styles.sessionDurationBadge}>
+                      <Text style={styles.sessionDurationText}>
+                        {track.duration || "N/A"}
+                      </Text>
+                    </View>
+                    {/* Play overlay icon */}
+                    <View style={styles.sessionPlayOverlay}>
+                      <View style={styles.sessionPlayCircle}>
+                        <Feather
+                          name="play"
+                          size={moderateScale(14)}
+                          color="#112116"
+                        />
+                      </View>
+                    </View>
+                  </View>
+                  <Text style={styles.sessionTitle} numberOfLines={1}>
+                    {track.title}
+                  </Text>
+                  <View style={styles.sessionMetaRow}>
+                    <Text style={styles.sessionMeta} numberOfLines={1}>
+                      {track.catname}
+                    </Text>
+                    <View style={styles.sessionMetaDot} />
+                    <Text style={styles.sessionTeacherName} numberOfLines={1}>
+                      {teacher?.name || "Unknown"}
                     </Text>
                   </View>
-                </View>
-                <Text style={styles.sessionTitle}>{session.title}</Text>
-                <Text style={styles.sessionMeta}>{session.meta}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+                  <View style={styles.sessionTrackRow}>
+                    <Ionicons
+                      name="musical-notes-outline"
+                      size={moderateScale(12)}
+                      color="#20DF6099"
+                    />
+                    <Text style={styles.sessionTrackLabel}>
+                      Track {teacherTracks.indexOf(track) + 1} of{" "}
+                      {teacherTracks.length}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          ) : (
+            // Fallback: show some allTracks if no teacher-specific match
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.sessionsScroll}
+            >
+              {allTracks.slice(0, 4).map((track) => (
+                <TouchableOpacity
+                  key={track._id}
+                  style={styles.sessionCard}
+                  onPress={() => navigation.navigate("Player", { track })}
+                >
+                  <View style={styles.sessionImageContainer}>
+                    <Image
+                      source={
+                        track.thumbnail
+                          ? { uri: track.thumbnail }
+                          : require("../../../assets/images/loader.png")
+                      }
+                      style={styles.sessionImage}
+                      resizeMode="cover"
+                    />
+                    <View style={styles.sessionDurationBadge}>
+                      <Text style={styles.sessionDurationText}>
+                        {track.duration || "N/A"}
+                      </Text>
+                    </View>
+                    <View style={styles.sessionPlayOverlay}>
+                      <View style={styles.sessionPlayCircle}>
+                        <Feather
+                          name="play"
+                          size={moderateScale(14)}
+                          color="#112116"
+                        />
+                      </View>
+                    </View>
+                  </View>
+                  <Text style={styles.sessionTitle} numberOfLines={1}>
+                    {track.title}
+                  </Text>
+                  <View style={styles.sessionMetaRow}>
+                    <Text style={styles.sessionMeta} numberOfLines={1}>
+                      {track.catname}
+                    </Text>
+                    <View style={styles.sessionMetaDot} />
+                    <Text style={styles.sessionTeacherName} numberOfLines={1}>
+                      {teacher?.name || "Unknown"}
+                    </Text>
+                  </View>
+                  <View style={styles.sessionTrackRow}>
+                    <Ionicons
+                      name="musical-notes-outline"
+                      size={moderateScale(12)}
+                      color="#20DF6099"
+                    />
+                    <Text style={styles.sessionTrackLabel}>
+                      Track {allTracks.slice(0, 4).indexOf(track) + 1}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
         </View>
 
         {/* Upcoming Live */}
@@ -487,6 +588,62 @@ const styles = StyleSheet.create({
     color: "#94A3B8",
     fontSize: moderateScale(12),
     marginTop: verticalScale(3),
+    flex: 1,
+  },
+  sessionMetaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: verticalScale(3),
+    gap: scale(6),
+  },
+  sessionMetaDot: {
+    width: moderateScale(4),
+    height: moderateScale(4),
+    borderRadius: moderateScale(2),
+    backgroundColor: "#20DF6066",
+  },
+  sessionTeacherName: {
+    color: "#20DF60",
+    fontSize: moderateScale(12),
+    fontWeight: "600",
+    flex: 1,
+  },
+  sessionTrackRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: scale(4),
+    marginTop: verticalScale(4),
+  },
+  sessionTrackLabel: {
+    color: "#20DF6099",
+    fontSize: moderateScale(11),
+    fontWeight: "500",
+  },
+  sessionPlayOverlay: {
+    position: "absolute",
+    bottom: moderateScale(10),
+    left: moderateScale(10),
+  },
+  sessionPlayCircle: {
+    width: moderateScale(30),
+    height: moderateScale(30),
+    borderRadius: moderateScale(15),
+    backgroundColor: "#20DF60",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  sessionsLoadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: scale(10),
+    paddingVertical: verticalScale(30),
+    paddingHorizontal: scale(16),
+  },
+  sessionsLoadingText: {
+    color: "#94A3B8",
+    fontSize: moderateScale(13),
+    fontWeight: "500",
   },
   liveSection: {
     paddingHorizontal: scale(16),

@@ -156,7 +156,7 @@ const SplashScreen = ({ navigation }) => {
                 {/* Circular avatar image */}
                 <View style={styles.avatarContainer}>
                   <Image
-                    source={require("../../assest/images/SplashScreen-avatar.png")}
+                    source={require("../../../assets/images/SplashScreen-avatar.png")}
                     style={styles.avatarImage}
                     resizeMode="cover"
                   />
@@ -175,7 +175,7 @@ const SplashScreen = ({ navigation }) => {
             >
               <View style={styles.lotusIconCircle}>
                 <Image
-                  source={require("../../assest/images/SplashScree-Icon.png")}
+                  source={require("../../../assets/images/SplashScree-Icon.png")}
                   style={styles.lotusIcon}
                   resizeMode="contain"
                 />
@@ -235,7 +235,7 @@ const SplashScreen = ({ navigation }) => {
           <TouchableOpacity
             style={styles.logInButton}
             activeOpacity={0.85}
-            onPress={() => navigation.navigate("Sign In")}
+            onPress={() => navigation.navigate("SignIn")}
           >
             <Text style={styles.logInText}>Log In</Text>
           </TouchableOpacity>

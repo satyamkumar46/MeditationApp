@@ -18,8 +18,8 @@ import {
   addRecentPlay,
   toggleFavorite,
 } from "../../features/slices/librarySlice";
-import { moderateScale, scale, verticalScale } from "../../utility/helpers";
 import GlobalAudioManager from "../../services/GlobalAudioManager";
+import { moderateScale, scale, verticalScale } from "../../utility/helpers";
 
 const PlayerScreen = ({ navigation, route }) => {
   const track = route?.params?.track;
@@ -61,7 +61,7 @@ const PlayerScreen = ({ navigation, route }) => {
         }
       }
     },
-    [hasTrackedPlay, track, dispatch]
+    [hasTrackedPlay, track, dispatch],
   );
 
   // Load audio via GlobalAudioManager
@@ -127,7 +127,7 @@ const PlayerScreen = ({ navigation, route }) => {
             duration: 1200,
             useNativeDriver: true,
           }),
-        ])
+        ]),
       ).start();
     } else {
       pulseAnim.setValue(1);
@@ -189,7 +189,7 @@ const PlayerScreen = ({ navigation, route }) => {
         source={
           thumbnailUri
             ? { uri: thumbnailUri }
-            : require("../../assest/images/forest-hero.png")
+            : require("../../../assets/images/loader.png")
         }
         style={styles.backgroundImage}
         resizeMode="cover"
@@ -225,7 +225,7 @@ const PlayerScreen = ({ navigation, route }) => {
               source={
                 thumbnailUri
                   ? { uri: thumbnailUri }
-                  : require("../../assest/images/forest-hero.png")
+                  : require("../../../assets/images/loader.png")
               }
               style={styles.artImage}
               resizeMode="cover"

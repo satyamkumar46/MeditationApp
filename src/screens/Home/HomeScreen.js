@@ -46,12 +46,12 @@ const getCategoryIcon = (catname) => {
   return CATEGORY_ICONS[catname] || "ellipse-outline";
 };
 
-
 const HomeScreen = ({ navigation }) => {
   const [greet, setGreet] = useState(getGreeting());
 
   const name = useSelector((state) => state.user.name);
   const profileImage = useSelector((state) => state.user.profileImage);
+  const streakCount = useSelector((state) => state.user.streakCount);
   const { allTracks, categories, loading, refetch } = useSounds();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -90,7 +90,7 @@ const HomeScreen = ({ navigation }) => {
             source={
               profileImage
                 ? { uri: profileImage }
-                : require("../../assest/images/face.jpg")
+                : require("../../../assets/images/face.jpg")
             }
             style={styles.avatarStyle}
           />
@@ -113,7 +113,10 @@ const HomeScreen = ({ navigation }) => {
               </TouchableOpacity>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.bellIcon}>
+            <TouchableOpacity
+              style={styles.bellIcon}
+              onPress={() => navigation.navigate("Notification")}
+            >
               <View style={styles.bellIconCircle}>
                 <Fontisto
                   name="bell"
@@ -142,7 +145,11 @@ const HomeScreen = ({ navigation }) => {
         {/* feature section */}
         <View style={styles.featuredSection}>
           <Image
-            source={require("../../assest/images/Background.png")}
+            source={
+              allTracks.length > 0 && allTracks[0].thumbnail
+                ? { uri: allTracks[0].thumbnail }
+                : require("../../../assets/images/background.png")
+            }
             style={styles.backgroundImage}
             resizeMode="cover"
           />
@@ -154,7 +161,9 @@ const HomeScreen = ({ navigation }) => {
             </View>
 
             <View style={styles.mainHeading}>
-              <Text style={styles.mainHeadingText}>Daily Calm</Text>
+              <Text style={styles.mainHeadingText}>
+                {allTracks.length > 0 ? allTracks[0].title : "Daily Calm"}
+              </Text>
             </View>
             <View style={styles.mainHeadingSummaryContainer}>
               <Text style={styles.mainHeadingSummary}>
@@ -169,11 +178,37 @@ const HomeScreen = ({ navigation }) => {
                 size={moderateScale(22)}
                 style={styles.iconsStyle}
               />
-              <Text style={styles.time}>10 min</Text>
+              <Text style={styles.time}>
+                {allTracks.length > 0 ? allTracks[0].duration : "10 min"}
+              </Text>
               <View style={styles.activeBtn}></View>
-              <Text style={styles.quote}>Mindfulness</Text>
+              <Text style={styles.quote}>
+                {allTracks.length > 0
+                  ? allTracks[0].catname
+                  : "Mindfulness"}
+              </Text>
 
-              <TouchableOpacity style={styles.btnContainer}>
+              {allTracks.length > 0 && (
+                <View style={styles.featuredTrackInfo}>
+                  <Ionicons
+                    name="musical-notes-outline"
+                    size={moderateScale(14)}
+                    color="#20DF60"
+                  />
+                  <Text style={styles.featuredTrackCount}>
+                    Track 1 of {allTracks.length}
+                  </Text>
+                </View>
+              )}
+
+              <TouchableOpacity
+                style={styles.btnContainer}
+                onPress={() => {
+                  if (allTracks.length > 0) {
+                    navigation.navigate("Player", { track: allTracks[0] });
+                  }
+                }}
+              >
                 <View style={styles.btn}>
                   <Feather
                     name="play"
@@ -200,7 +235,9 @@ const HomeScreen = ({ navigation }) => {
               color="#20DF60"
               size={24}
             />
-            <Text style={styles.quickStatsText}>3 Day Streak</Text>
+            <Text style={styles.quickStatsText}>
+              {streakCount} Day Streak
+            </Text>
           </View>
         </View>
 
@@ -431,6 +468,20 @@ const styles = StyleSheet.create({
     gap: scale(8),
     alignItems: "center",
     flexWrap: "wrap",
+  },
+  featuredTrackInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: scale(4),
+    backgroundColor: "#20DF601A",
+    borderRadius: moderateScale(12),
+    paddingHorizontal: scale(8),
+    paddingVertical: verticalScale(3),
+  },
+  featuredTrackCount: {
+    color: "#20DF60",
+    fontSize: moderateScale(11),
+    fontWeight: "600",
   },
   time: {
     color: "#20DF60",

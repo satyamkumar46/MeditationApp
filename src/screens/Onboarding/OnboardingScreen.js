@@ -10,7 +10,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { getScreenWidth, scale, verticalScale, moderateScale } from "../../utility/helpers";
+import {
+  getScreenWidth,
+  moderateScale,
+  scale,
+  verticalScale,
+} from "../../utility/helpers";
 
 const SCREEN_WIDTH = getScreenWidth();
 
@@ -18,7 +23,7 @@ const ONBOARDING_DATA = [
   {
     id: "1",
     headerType: "brand", // Shows "Lumina" header
-    image: require("../../assest/images/onboarding-forest.png"),
+    image: require("../../../assets/images/onboarding-forest.png"),
     imageStyle: "fullWidth",
     title: "Find Your Calm",
     description:
@@ -29,7 +34,7 @@ const ONBOARDING_DATA = [
   {
     id: "2",
     headerType: "onboarding", // Shows back arrow + "Onboarding"
-    image: require("../../assest/images/onboarding-progress.png"),
+    image: require("../../../assets/images/onboarding-progress.png"),
     imageStyle: "card",
     title: "Track Your Progress",
     description:
@@ -40,7 +45,7 @@ const ONBOARDING_DATA = [
   {
     id: "3",
     headerType: "onboarding",
-    image: require("../../assest/images/onboarding-personalized.png"),
+    image: require("../../../assets/images/onboarding-personalized.png"),
     imageStyle: "rounded",
     title: "Personalized For You",
     description:
@@ -87,12 +92,12 @@ const OnboardingScreen = ({ navigation }) => {
     if (action === "next") {
       goToNext();
     } else if (action === "getStarted") {
-      navigation.navigate("Sign In");
+      navigation.navigate("SignIn");
     }
   };
 
   const handleSkip = () => {
-    navigation.navigate("Sign In");
+    navigation.navigate("SignIn");
   };
 
   const renderDots = () => (

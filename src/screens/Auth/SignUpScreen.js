@@ -81,7 +81,7 @@ const SignUpScreen = ({ navigation }) => {
       Alert.alert("Success", "Account created successfully");
 
       dispatch(setName(user.name));
-      navigation.navigate("Sign In");
+      navigation.navigate("SignIn");
     } catch (error) {
       Alert.alert("Error", error.message);
     }
@@ -104,7 +104,7 @@ const SignUpScreen = ({ navigation }) => {
           <View style={styles.logoBox}>
             <View style={styles.circle}>
               <Image
-                source={require("../../assest/images/person-logo.png")}
+                source={require("../../../assets/images/person-logo.png")}
                 style={styles.personLogo}
               />
             </View>
@@ -181,14 +181,14 @@ const SignUpScreen = ({ navigation }) => {
           </Pressable>
 
           {/* continue text */}
-          <View style={styles.continueText}>
+          {/* <View style={styles.continueText}>
             <View style={styles.dividerLine} />
             <Text style={styles.orText}>OR CONTINUE WITH</Text>
             <View style={styles.dividerLine} />
-          </View>
+          </View> */}
 
           {/* google button */}
-          <View style={styles.btns}>
+          {/* <View style={styles.btns}>
             <Pressable style={styles.googleBtn}>
               <Image
                 source={require("../../assest/images/google-logo.png")}
@@ -204,13 +204,13 @@ const SignUpScreen = ({ navigation }) => {
               />
               <Text style={styles.btnText}>ios</Text>
             </Pressable>
-          </View>
+          </View> */}
         </View>
 
         {/* bottom section */}
         <View style={styles.bottomBar}>
           <Text style={styles.newAccount}>Already have an account?</Text>
-          <Pressable onPress={() => navigation.navigate("Sign In")}>
+          <Pressable onPress={() => navigation.navigate("SignIn")}>
             <Text style={styles.signUpText}>Log In</Text>
           </Pressable>
         </View>
@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
   bottomBar: {
     flexDirection: "row",
     width: "100%",
-    paddingVertical: verticalScale(30),
+    paddingVertical: verticalScale(140),
     justifyContent: "center",
     alignItems: "center",
     gap: scale(8),

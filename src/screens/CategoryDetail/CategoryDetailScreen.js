@@ -1,5 +1,4 @@
 import {
-  ActivityIndicator,
   Image,
   Platform,
   ScrollView,
@@ -32,7 +31,7 @@ const LEGACY_CATEGORY_DATA = {
     badge: "CATEGORY",
     ctaIcon: "heart",
     ctaText: "Nurture Self",
-    heroImage: require("../../assest/images/morning-calm-image.png"),
+    heroImage: require("../../../assets/images/loader.png"),
     subtitle: "Daily Rituals",
     subtitleDesc: "Gentle practices for your inner world",
     sessions: [
@@ -64,7 +63,7 @@ const LEGACY_CATEGORY_DATA = {
     badge: "GUIDED COLLECTION",
     ctaIcon: "play",
     ctaText: "Begin Relief",
-    heroImage: require("../../assest/images/calm-water-lake.png"),
+    heroImage: require("../../../assets/images/loader.png"),
     subtitle: "Today's Sessions",
     subtitleDesc: null,
     sessions: [
@@ -103,7 +102,7 @@ const LEGACY_CATEGORY_DATA = {
     badge: "GUIDED PATH",
     ctaIcon: "play",
     ctaText: "Start Journey",
-    heroImage: require("../../assest/images/zen-stones.png"),
+    heroImage: require("../../../assets/images/loader.png"),
     subtitle: "Today's Sessions",
     subtitleDesc: null,
     sessions: [
@@ -112,21 +111,21 @@ const LEGACY_CATEGORY_DATA = {
         level: "BEGINNER • 12 MIN",
         title: "Forest Breathing",
         description: "Connect with the rhythm of the woods.",
-        image: require("../../assest/images/deep-wood-image.png"),
+        image: require("../../../assets/images/loader.png"),
       },
       {
         id: 2,
         level: "INTERMEDIATE • 20 MIN",
         title: "Mountain Stillness",
         description: "Elevate your awareness in the peaks.",
-        image: require("../../assest/images/mountain-image.png"),
+        image: require("../../../assets/images/loader.png"),
       },
       {
         id: 3,
         level: "ADVANCED • 35 MIN",
         title: "Deep Tide Release",
         description: "Let go with the ebb and flow.",
-        image: require("../../assest/images/evening-wind-image.png"),
+        image: require("../../../assets/images/loader.png"),
       },
     ],
     stats: [
@@ -176,7 +175,9 @@ const CategoryDetailScreen = ({ navigation, route }) => {
                 resizeMode="cover"
               />
             ) : (
-              <View style={[styles.heroImage, { backgroundColor: "#0D3320" }]} />
+              <View
+                style={[styles.heroImage, { backgroundColor: "#0D3320" }]}
+              />
             )}
             <View style={styles.heroOverlay} />
 
@@ -270,9 +271,7 @@ const CategoryDetailScreen = ({ navigation, route }) => {
           {/* Tracks Header */}
           <View style={styles.apiTracksHeader}>
             <Text style={styles.apiTracksTitle}>All Tracks</Text>
-            <Text style={styles.apiTracksCount}>
-              {tracks.length} TOTAL
-            </Text>
+            <Text style={styles.apiTracksCount}>{tracks.length} TOTAL</Text>
           </View>
 
           {/* Track List */}
@@ -345,7 +344,7 @@ const CategoryDetailScreen = ({ navigation, route }) => {
               >
                 {[
                   ...new Map(
-                    tracks.map((t) => [t.teacher?.name, t.teacher])
+                    tracks.map((t) => [t.teacher?.name, t.teacher]),
                   ).values(),
                 ].map((teacher) =>
                   teacher ? (
@@ -354,10 +353,7 @@ const CategoryDetailScreen = ({ navigation, route }) => {
                         source={{ uri: teacher.image }}
                         style={styles.apiTeacherImage}
                       />
-                      <Text
-                        style={styles.apiTeacherName}
-                        numberOfLines={1}
-                      >
+                      <Text style={styles.apiTeacherName} numberOfLines={1}>
                         {teacher.name}
                       </Text>
                       <View style={styles.apiTeacherRatingRow}>
@@ -371,7 +367,7 @@ const CategoryDetailScreen = ({ navigation, route }) => {
                         </Text>
                       </View>
                     </View>
-                  ) : null
+                  ) : null,
                 )}
               </ScrollView>
             </View>
@@ -399,7 +395,9 @@ const CategoryDetailScreen = ({ navigation, route }) => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{categoryKey}</Text>
         </View>
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
           <Text style={{ color: "#94A3B8", fontSize: moderateScale(16) }}>
             Category not found
           </Text>

@@ -101,7 +101,7 @@ const SignInScreen = ({ navigation }) => {
           <View style={styles.logoBox}>
             <View style={styles.circle}>
               <Image
-                source={require("../../assest/images/ContainerLogo.png")}
+                source={require("../../../assets/images/containerLogo.png")}
                 style={styles.titleLogo}
               />
             </View>
@@ -172,14 +172,14 @@ const SignInScreen = ({ navigation }) => {
           </Pressable>
 
           {/* continue text */}
-          <View style={styles.continueText}>
+          {/* <View style={styles.continueText}>
             <View style={styles.dividerLine} />
             <Text style={styles.orText}>OR CONTINUE WITH</Text>
             <View style={styles.dividerLine} />
-          </View>
+          </View> */}
 
           {/* google button */}
-          <View style={styles.btns}>
+          {/* <View style={styles.btns}>
             <Pressable style={styles.googleBtn}>
               <Image
                 source={require("../../assest/images/google-logo.png")}
@@ -195,7 +195,7 @@ const SignInScreen = ({ navigation }) => {
               />
               <Text style={styles.btnText}>ios</Text>
             </Pressable>
-          </View>
+          </View> */}
         </View>
 
         {/* bottom section */}
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
   bottomBar: {
     flexDirection: "row",
     width: "100%",
-    paddingVertical: verticalScale(30),
+    paddingVertical: verticalScale(140),
     justifyContent: "center",
     alignItems: "center",
     gap: scale(8),

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -32,6 +32,7 @@ const ExploreScreen = ({ navigation }) => {
   } = useSounds();
   const [activeTeacherId, setActiveTeacherId] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const loading = teachersLoading || soundsLoading;
 
@@ -46,6 +47,35 @@ const ExploreScreen = ({ navigation }) => {
     await Promise.all([refetchTeachers?.(), refetchSounds?.()]);
     setRefreshing(false);
   };
+
+  // ========== SEARCH FILTERING ==========
+  const query = searchQuery.trim().toLowerCase();
+  const isSearching = query.length > 0;
+
+  const filteredTracks = useMemo(() => {
+    if (!isSearching) return [];
+    return allTracks.filter(
+      (t) =>
+        t.title?.toLowerCase().includes(query) ||
+        t.catname?.toLowerCase().includes(query) ||
+        t.teacher?.name?.toLowerCase().includes(query),
+    );
+  }, [query, allTracks]);
+
+  const filteredTeachers = useMemo(() => {
+    if (!isSearching) return [];
+    return teachers.filter((t) => t.name?.toLowerCase().includes(query));
+  }, [query, teachers]);
+
+  const filteredCategories = useMemo(() => {
+    if (!isSearching) return [];
+    return categories.filter((c) => c.catname?.toLowerCase().includes(query));
+  }, [query, categories]);
+
+  const hasResults =
+    filteredTracks.length > 0 ||
+    filteredTeachers.length > 0 ||
+    filteredCategories.length > 0;
 
   if (loading) {
     return (
@@ -76,7 +106,19 @@ const ExploreScreen = ({ navigation }) => {
             placeholder="Search meditations, music, teachers"
             style={styles.searchPlaceholder}
             placeholderTextColor={"#20DF6066"}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            returnKeyType="search"
+            autoCorrect={false}
           />
+          {isSearching && (
+            <TouchableOpacity
+              style={styles.clearSearchBtn}
+              onPress={() => setSearchQuery("")}
+            >
+              <Ionicons name="close-circle" size={20} color="#94A3B8" />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
@@ -84,6 +126,7 @@ const ExploreScreen = ({ navigation }) => {
       <ScrollView
         showsVerticalScrollIndicator={false}
         style={styles.contentSection}
+        keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -94,169 +137,323 @@ const ExploreScreen = ({ navigation }) => {
           />
         }
       >
-        {/* collection search */}
-        <View style={styles.collectionSearchContainer}>
-          {/* popular collection */}
-          <View style={styles.popularCategoryContainer}>
-            <View style={styles.popularCategoryTextContainer}>
-              <Text style={styles.popularCategoryText}>
-                Popular Collections
-              </Text>
-            </View>
-            <Pressable
-              style={styles.popularCategorySeeTextContainer}
-              onPress={() => navigation.navigate("Collection")}
-            >
-              <Text style={styles.popularCategorySeeText}>See all</Text>
-            </Pressable>
-          </View>
-
-          {/* card */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.cardContainer}
-          >
-            {categories.slice(0, 4).map((cat) => (
-              <TouchableOpacity
-                key={cat._id}
-                style={styles.cardOneContainer}
-                onPress={() =>
-                  navigation.navigate("CategoryDetail", {
-                    category: cat.catname,
-                    categoryData: cat,
-                  })
-                }
-              >
-                <Image
-                  source={
-                    cat.tracks?.[0]?.thumbnail
-                      ? { uri: cat.tracks[0].thumbnail }
-                      : require("../../assest/images/nature-sounds.avif")
-                  }
-                  style={styles.ContainerImage}
+        {/* ========== SEARCH RESULTS ========== */}
+        {isSearching ? (
+          <View style={styles.searchResultsContainer}>
+            {!hasResults ? (
+              <View style={styles.noResultsContainer}>
+                <Ionicons
+                  name="search-outline"
+                  size={moderateScale(48)}
+                  color="#20DF6033"
                 />
-                <View style={styles.cardOverlay} />
-                <View style={styles.cardTextContainer}>
-                  <Text style={styles.cardText}>{cat.catname}</Text>
-                  <Text style={styles.cardTrackCount}>
-                    {cat.tracks?.length || 0} tracks
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-
-          {/* top teachers */}
-          <View style={styles.topTeachersContainer}>
-            {/* teacher heading */}
-            <View style={styles.teacherHeaderContainer}>
-              <View style={styles.topTeachersTextContainer}>
-                <Text style={styles.topTeachersText}>Top Teachers</Text>
+                <Text style={styles.noResultsTitle}>No results found</Text>
+                <Text style={styles.noResultsSubtitle}>
+                  Try a different search term
+                </Text>
               </View>
-
-              <Pressable
-                style={styles.teacherViewAllContainer}
-                onPress={() => navigation.navigate("TopTeachers")}
-              >
-                <Text style={styles.teacherViewAllText}>View all</Text>
-              </Pressable>
-            </View>
-
-            {/* teachers */}
-            <ScrollView
-              showsHorizontalScrollIndicator={false}
-              horizontal={true}
-              style={styles.teachersContainer}
-            >
-              {error ? (
-                <View style={styles.teacherLoadingContainer}>
-                  <Text style={styles.teacherErrorText}>
-                    Failed to load teachers
-                  </Text>
-                </View>
-              ) : (
-                teachers.slice(0, 5).map((teacher) => {
-                  const isActive = activeTeacherId === teacher._id;
-                  return (
-                    <Pressable
-                      key={teacher._id}
-                      style={styles.teacherFrame}
-                      onPress={() => handleTeacherPress(teacher._id)}
+            ) : (
+              <>
+                {/* Matching Teachers */}
+                {filteredTeachers.length > 0 && (
+                  <View style={styles.searchSection}>
+                    <Text style={styles.searchSectionTitle}>
+                      TEACHERS ({filteredTeachers.length})
+                    </Text>
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={{ gap: scale(12) }}
                     >
-                      <View
-                        style={[
-                          styles.teacherCircle,
-                          isActive && styles.teacherCircleActive,
-                        ]}
-                      >
-                        <View style={styles.teacherImageWrapper}>
+                      {filteredTeachers.map((teacher) => (
+                        <Pressable
+                          key={teacher._id}
+                          style={styles.searchTeacherCard}
+                          onPress={() => handleTeacherPress(teacher._id)}
+                        >
                           <Image
                             source={{ uri: teacher.image }}
-                            style={styles.teacherImage}
+                            style={styles.searchTeacherImage}
                           />
+                          <Text
+                            style={styles.searchTeacherName}
+                            numberOfLines={1}
+                          >
+                            {teacher.name}
+                          </Text>
+                        </Pressable>
+                      ))}
+                    </ScrollView>
+                  </View>
+                )}
+
+                {/* Matching Categories */}
+                {filteredCategories.length > 0 && (
+                  <View style={styles.searchSection}>
+                    <Text style={styles.searchSectionTitle}>
+                      COLLECTIONS ({filteredCategories.length})
+                    </Text>
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={{ gap: scale(10) }}
+                    >
+                      {filteredCategories.map((cat) => (
+                        <TouchableOpacity
+                          key={cat._id}
+                          style={styles.searchCategoryCard}
+                          onPress={() =>
+                            navigation.navigate("CategoryDetail", {
+                              category: cat.catname,
+                              categoryData: cat,
+                            })
+                          }
+                        >
+                          <Image
+                            source={
+                              cat.tracks?.[0]?.thumbnail
+                                ? { uri: cat.tracks[0].thumbnail }
+                                : require("../../../assets/images/loader.png")
+                            }
+                            style={styles.searchCategoryImage}
+                          />
+                          <View style={styles.searchCategoryOverlay} />
+                          <Text style={styles.searchCategoryName}>
+                            {cat.catname}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
+                )}
+
+                {/* Matching Tracks */}
+                {filteredTracks.length > 0 && (
+                  <View style={styles.searchSection}>
+                    <Text style={styles.searchSectionTitle}>
+                      MEDITATIONS & MUSIC ({filteredTracks.length})
+                    </Text>
+                    {filteredTracks.map((track) => (
+                      <TouchableOpacity
+                        key={track._id}
+                        style={styles.songContainer}
+                        onPress={() => navigation.navigate("Player", { track })}
+                      >
+                        <View style={styles.songInsideContainer}>
+                          <View style={styles.songInsideSecondContainer}>
+                            <View style={styles.songOneImgContainer}>
+                              <Image
+                                source={{ uri: track.thumbnail }}
+                                style={styles.songOneImg}
+                              />
+                            </View>
+                            <View style={styles.arrivalInsideTextContainer}>
+                              <View style={styles.mindMorningContainer}>
+                                <Text
+                                  style={styles.mindMorningText}
+                                  numberOfLines={1}
+                                >
+                                  {track.title}
+                                </Text>
+                              </View>
+                              <View style={styles.timerContainer}>
+                                <Text style={styles.time}>
+                                  {track.duration}
+                                </Text>
+                                <View style={styles.activebtn} />
+                                <Text style={styles.guide}>
+                                  {track.catname}
+                                </Text>
+                              </View>
+                            </View>
+                            <View style={styles.songPlayBtnContainer}>
+                              <View style={styles.songCirclePtrn}>
+                                <Feather
+                                  name="play"
+                                  color="#20DF60"
+                                  size={24}
+                                />
+                              </View>
+                            </View>
+                          </View>
+                        </View>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </>
+            )}
+          </View>
+        ) : (
+          <>
+            {/* collection search */}
+            <View style={styles.collectionSearchContainer}>
+              {/* popular collection */}
+              <View style={styles.popularCategoryContainer}>
+                <View style={styles.popularCategoryTextContainer}>
+                  <Text style={styles.popularCategoryText}>
+                    Popular Collections
+                  </Text>
+                </View>
+                <Pressable
+                  style={styles.popularCategorySeeTextContainer}
+                  onPress={() => navigation.navigate("Collection")}
+                >
+                  <Text style={styles.popularCategorySeeText}>See all</Text>
+                </Pressable>
+              </View>
+
+              {/* card */}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.cardContainer}
+              >
+                {categories.slice(0, 4).map((cat) => (
+                  <TouchableOpacity
+                    key={cat._id}
+                    style={styles.cardOneContainer}
+                    onPress={() =>
+                      navigation.navigate("CategoryDetail", {
+                        category: cat.catname,
+                        categoryData: cat,
+                      })
+                    }
+                  >
+                    <Image
+                      source={
+                        cat.tracks?.[0]?.thumbnail
+                          ? { uri: cat.tracks[0].thumbnail }
+                          : require("../../../assets/images/loader.png")
+                      }
+                      style={styles.ContainerImage}
+                    />
+                    <View style={styles.cardOverlay} />
+                    <View style={styles.cardTextContainer}>
+                      <Text style={styles.cardText}>{cat.catname}</Text>
+                      <Text style={styles.cardTrackCount}>
+                        {cat.tracks?.length || 0} tracks
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
+              {/* top teachers */}
+              <View style={styles.topTeachersContainer}>
+                {/* teacher heading */}
+                <View style={styles.teacherHeaderContainer}>
+                  <View style={styles.topTeachersTextContainer}>
+                    <Text style={styles.topTeachersText}>Top Teachers</Text>
+                  </View>
+
+                  <Pressable
+                    style={styles.teacherViewAllContainer}
+                    onPress={() => navigation.navigate("TopTeachers")}
+                  >
+                    <Text style={styles.teacherViewAllText}>View all</Text>
+                  </Pressable>
+                </View>
+
+                {/* teachers */}
+                <ScrollView
+                  showsHorizontalScrollIndicator={false}
+                  horizontal={true}
+                  style={styles.teachersContainer}
+                >
+                  {error ? (
+                    <View style={styles.teacherLoadingContainer}>
+                      <Text style={styles.teacherErrorText}>
+                        Failed to load teachers
+                      </Text>
+                    </View>
+                  ) : (
+                    teachers.slice(0, 5).map((teacher) => {
+                      const isActive = activeTeacherId === teacher._id;
+                      return (
+                        <Pressable
+                          key={teacher._id}
+                          style={styles.teacherFrame}
+                          onPress={() => handleTeacherPress(teacher._id)}
+                        >
+                          <View
+                            style={[
+                              styles.teacherCircle,
+                              isActive && styles.teacherCircleActive,
+                            ]}
+                          >
+                            <View style={styles.teacherImageWrapper}>
+                              <Image
+                                source={{ uri: teacher.image }}
+                                style={styles.teacherImage}
+                              />
+                            </View>
+                          </View>
+
+                          <View style={styles.teacherNameContainer}>
+                            <Text style={styles.teacherName} numberOfLines={1}>
+                              {teacher.name}
+                            </Text>
+                          </View>
+                        </Pressable>
+                      );
+                    })
+                  )}
+                </ScrollView>
+              </View>
+            </View>
+
+            {/* new arrival */}
+            <View style={styles.newArrivalContainer}>
+              {/* text */}
+              <View style={styles.newArrivalTextContainer}>
+                <Text style={styles.newArrivalText}>New Arrival</Text>
+              </View>
+
+              {allTracks.slice(0, 5).map((track) => (
+                <TouchableOpacity
+                  key={track._id}
+                  style={styles.songContainer}
+                  onPress={() => navigation.navigate("Player", { track })}
+                >
+                  <View style={styles.songInsideContainer}>
+                    <View style={styles.songInsideSecondContainer}>
+                      <View style={styles.songOneImgContainer}>
+                        <Image
+                          source={{ uri: track.thumbnail }}
+                          style={styles.songOneImg}
+                        />
+                      </View>
+
+                      <View style={styles.arrivalInsideTextContainer}>
+                        <View style={styles.mindMorningContainer}>
+                          <Text
+                            style={styles.mindMorningText}
+                            numberOfLines={1}
+                          >
+                            {track.title}
+                          </Text>
+                        </View>
+
+                        <View style={styles.timerContainer}>
+                          <Text style={styles.time}>{track.duration}</Text>
+                          <View style={styles.activebtn} />
+                          <Text style={styles.guide}>{track.catname}</Text>
                         </View>
                       </View>
 
-                      <View style={styles.teacherNameContainer}>
-                        <Text style={styles.teacherName} numberOfLines={1}>
-                          {teacher.name}
-                        </Text>
+                      <View style={styles.songPlayBtnContainer}>
+                        <View style={styles.songCirclePtrn}>
+                          <Feather name="play" color="#20DF60" size={24} />
+                        </View>
                       </View>
-                    </Pressable>
-                  );
-                })
-              )}
-            </ScrollView>
-          </View>
-        </View>
-
-        {/* new arrival */}
-        <View style={styles.newArrivalContainer}>
-          {/* text */}
-          <View style={styles.newArrivalTextContainer}>
-            <Text style={styles.newArrivalText}>New Arrival</Text>
-          </View>
-
-          {allTracks.slice(0, 5).map((track) => (
-            <TouchableOpacity
-              key={track._id}
-              style={styles.songContainer}
-              onPress={() => navigation.navigate("Player", { track })}
-            >
-              <View style={styles.songInsideContainer}>
-                <View style={styles.songInsideSecondContainer}>
-                  <View style={styles.songOneImgContainer}>
-                    <Image
-                      source={{ uri: track.thumbnail }}
-                      style={styles.songOneImg}
-                    />
-                  </View>
-
-                  <View style={styles.arrivalInsideTextContainer}>
-                    <View style={styles.mindMorningContainer}>
-                      <Text style={styles.mindMorningText} numberOfLines={1}>
-                        {track.title}
-                      </Text>
-                    </View>
-
-                    <View style={styles.timerContainer}>
-                      <Text style={styles.time}>{track.duration}</Text>
-                      <View style={styles.activebtn} />
-                      <Text style={styles.guide}>{track.catname}</Text>
                     </View>
                   </View>
-
-                  <View style={styles.songPlayBtnContainer}>
-                    <View style={styles.songCirclePtrn}>
-                      <Feather name="play" color="#20DF60" size={24} />
-                    </View>
-                  </View>
-                </View>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </>
+        )}
       </ScrollView>
     </View>
   );
@@ -556,5 +753,80 @@ const styles = StyleSheet.create({
     borderRadius: moderateScale(35),
     justifyContent: "center",
     alignItems: "center",
+  },
+  // ========== SEARCH STYLES ==========
+  clearSearchBtn: {
+    padding: moderateScale(8),
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  searchResultsContainer: {
+    paddingHorizontal: scale(16),
+    paddingBottom: verticalScale(30),
+  },
+  noResultsContainer: {
+    alignItems: "center",
+    paddingVertical: verticalScale(60),
+    gap: verticalScale(10),
+  },
+  noResultsTitle: {
+    color: "#F1F5F9",
+    fontSize: moderateScale(18),
+    fontWeight: "bold",
+  },
+  noResultsSubtitle: {
+    color: "#94A3B8",
+    fontSize: moderateScale(14),
+  },
+  searchSection: {
+    marginBottom: verticalScale(24),
+  },
+  searchSectionTitle: {
+    color: "#20DF60",
+    fontSize: moderateScale(11),
+    fontWeight: "bold",
+    letterSpacing: 1.2,
+    marginBottom: verticalScale(12),
+  },
+  searchTeacherCard: {
+    alignItems: "center",
+    width: scale(80),
+  },
+  searchTeacherImage: {
+    width: moderateScale(60),
+    height: moderateScale(60),
+    borderRadius: moderateScale(30),
+    borderWidth: 2,
+    borderColor: "#20DF6066",
+    marginBottom: verticalScale(6),
+  },
+  searchTeacherName: {
+    color: "#F1F5F9",
+    fontSize: moderateScale(12),
+    fontWeight: "500",
+    textAlign: "center",
+  },
+  searchCategoryCard: {
+    width: scale(140),
+    height: verticalScale(90),
+    borderRadius: moderateScale(12),
+    overflow: "hidden",
+    justifyContent: "flex-end",
+    padding: moderateScale(10),
+  },
+  searchCategoryImage: {
+    ...StyleSheet.absoluteFillObject,
+    width: "100%",
+    height: "100%",
+  },
+  searchCategoryOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.45)",
+  },
+  searchCategoryName: {
+    color: "#F1F5F9",
+    fontSize: moderateScale(14),
+    fontWeight: "bold",
+    zIndex: 1,
   },
 });

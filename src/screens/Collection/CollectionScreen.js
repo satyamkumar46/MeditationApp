@@ -79,7 +79,7 @@ const CollectionScreen = ({ navigation }) => {
               source={
                 categories[0].tracks?.[0]?.thumbnail
                   ? { uri: categories[0].tracks[0].thumbnail }
-                  : require("../../assest/images/morning-calm-image.png")
+                  : require("../../../assets/images/loader.png")
               }
               style={styles.heroImage}
               resizeMode="cover"
@@ -94,11 +94,7 @@ const CollectionScreen = ({ navigation }) => {
                 {categories[0].tracks?.length || 0} Tracks • Curated Collection
               </Text>
               <TouchableOpacity style={styles.ctaBtn}>
-                <Feather
-                  name="play"
-                  size={moderateScale(14)}
-                  color="#112116"
-                />
+                <Feather name="play" size={moderateScale(14)} color="#112116" />
                 <Text style={styles.ctaBtnText}>Explore</Text>
               </TouchableOpacity>
             </View>
@@ -108,9 +104,7 @@ const CollectionScreen = ({ navigation }) => {
         {/* All Categories Grid */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>All Categories</Text>
-          <Text style={styles.countText}>
-            {categories.length} COLLECTIONS
-          </Text>
+          <Text style={styles.countText}>{categories.length} COLLECTIONS</Text>
         </View>
 
         {/* Wide cards for first 2 categories */}
@@ -129,7 +123,7 @@ const CollectionScreen = ({ navigation }) => {
               source={
                 cat.tracks?.[0]?.thumbnail
                   ? { uri: cat.tracks[0].thumbnail }
-                  : require("../../assest/images/deep-wood-image.png")
+                  : require("../../../assets/images/loader.png")
               }
               style={styles.wideCardImage}
               resizeMode="cover"
@@ -147,11 +141,7 @@ const CollectionScreen = ({ navigation }) => {
               </Text>
             </View>
             <TouchableOpacity style={styles.wideCardPlayBtn}>
-              <Feather
-                name="play"
-                size={moderateScale(18)}
-                color="#20DF60"
-              />
+              <Feather name="play" size={moderateScale(18)} color="#20DF60" />
             </TouchableOpacity>
           </TouchableOpacity>
         ))}
@@ -172,7 +162,7 @@ const CollectionScreen = ({ navigation }) => {
               source={
                 cat.tracks?.[0]?.thumbnail
                   ? { uri: cat.tracks[0].thumbnail }
-                  : require("../../assest/images/forest-hero.png")
+                  : require("../../../assets/images/loader.png")
               }
               style={styles.tallCardImage}
               resizeMode="cover"
@@ -218,7 +208,7 @@ const CollectionScreen = ({ navigation }) => {
                       source={
                         cat.tracks?.[0]?.thumbnail
                           ? { uri: cat.tracks[0].thumbnail }
-                          : require("../../assest/images/mountain-image.png")
+                          : require("../../../assets/images/loader.png")
                       }
                       style={styles.gridImage}
                       resizeMode="cover"

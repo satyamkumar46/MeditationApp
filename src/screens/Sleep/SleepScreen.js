@@ -8,9 +8,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Ionicons from "react-native-vector-icons/Ionicons";
 import Feather from "react-native-vector-icons/Feather";
-import { scale, verticalScale, moderateScale } from "../../utility/helpers";
+import Ionicons from "react-native-vector-icons/Ionicons";
+import { moderateScale, scale, verticalScale } from "../../utility/helpers";
 
 const SLEEP_STORIES = [
   {
@@ -18,28 +18,32 @@ const SLEEP_STORIES = [
     title: "The Midnight Rain",
     duration: "24 min",
     category: "Soundscape",
-    image: require("../../assest/images/deep-wood-image.png"),
+    image: require("../../../assets/images/loader.png"),
   },
   {
     id: 2,
     title: "Valley of Echoes",
     duration: "45 min",
     category: "Guided Story",
-    image: require("../../assest/images/mountain-image.png"),
+    image: require("../../../assets/images/loader.png"),
   },
   {
     id: 3,
     title: "Celestial Drift",
     duration: "30 min",
     category: "Ambient Music",
-    image: require("../../assest/images/evening-wind-image.png"),
+    image: require("../../../assets/images/loader.png"),
   },
 ];
 
 const SleepScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="transparent"
+        translucent
+      />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -48,7 +52,7 @@ const SleepScreen = ({ navigation }) => {
         {/* Hero Section with Background */}
         <View style={styles.heroSection}>
           <Image
-            source={require("../../assest/images/night-sky-sleep.png")}
+            source={require("../../../assets/images/loader.png")}
             style={styles.heroImage}
             resizeMode="cover"
           />
@@ -73,8 +77,8 @@ const SleepScreen = ({ navigation }) => {
           <View style={styles.heroContent}>
             <Text style={styles.heroTitle}>Deep Sleep</Text>
             <Text style={styles.heroSubtitle}>
-              Quiet your mind and prepare for{"\n"}restorative rest in the forest
-              sanctuary.
+              Quiet your mind and prepare for{"\n"}restorative rest in the
+              forest sanctuary.
             </Text>
             <TouchableOpacity style={styles.driftBtn}>
               <Text style={styles.driftBtnText}>Drift Away</Text>
@@ -101,11 +105,7 @@ const SleepScreen = ({ navigation }) => {
                 </Text>
               </View>
               <TouchableOpacity style={styles.playBtn}>
-                <Feather
-                  name="play"
-                  size={moderateScale(18)}
-                  color="#20DF60"
-                />
+                <Feather name="play" size={moderateScale(18)} color="#20DF60" />
               </TouchableOpacity>
             </TouchableOpacity>
           ))}
@@ -116,7 +116,8 @@ const SleepScreen = ({ navigation }) => {
           <Text style={styles.goalLabel}>TONIGHT'S GOAL</Text>
           <Text style={styles.goalTitle}>Total stillness in 8 minutes</Text>
           <Text style={styles.goalSubtitle}>
-            Your sleep consistency is up by 12% this week. Keep the streak going.
+            Your sleep consistency is up by 12% this week. Keep the streak
+            going.
           </Text>
         </View>
       </ScrollView>

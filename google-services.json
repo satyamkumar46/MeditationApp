@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "494438078961",
+    "project_id": "qwiklabs-gcp-03-3f7e53a2-71447",
+    "storage_bucket": "qwiklabs-gcp-03-3f7e53a2-71447.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:494438078961:android:667c01037d2b021c2f0c50",
+        "android_client_info": {
+          "package_name": "com.sksatyam.MeditationApp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBx6_wj98RFSUT8Ku0WAWmCmKetaZj4MLI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
