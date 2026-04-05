@@ -3,7 +3,6 @@ import { StatusBar } from "expo-status-bar";
 import { useRef, useState } from "react";
 import {
   Animated,
-  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -15,7 +14,12 @@ import {
   View,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import { getScreenWidth, scale, verticalScale, moderateScale } from "../../utility/helpers";
+import {
+  getScreenWidth,
+  moderateScale,
+  scale,
+  verticalScale,
+} from "../../utility/helpers";
 
 const width = getScreenWidth();
 
@@ -81,7 +85,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
 
   const handleResetPassword = () => {
     if (newPassword && confirmPassword && newPassword === confirmPassword) {
-      navigation.navigate("Sign In");
+      navigation.navigate("SignIn");
     }
   };
 
@@ -268,10 +272,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
                 {otp.map((digit, index) => (
                   <View
                     key={index}
-                    style={[
-                      styles.otpBox,
-                      digit && styles.otpBoxFilled,
-                    ]}
+                    style={[styles.otpBox, digit && styles.otpBoxFilled]}
                   >
                     <TextInput
                       ref={(ref) => (otpRefs.current[index] = ref)}
@@ -438,7 +439,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
         {/* Bottom Link */}
         <View style={styles.bottomBar}>
           <Text style={styles.bottomText}>Remember your password? </Text>
-          <Pressable onPress={() => navigation.navigate("Sign In")}>
+          <Pressable onPress={() => navigation.navigate("SignIn")}>
             <Text style={styles.bottomLink}>Sign In</Text>
           </Pressable>
         </View>

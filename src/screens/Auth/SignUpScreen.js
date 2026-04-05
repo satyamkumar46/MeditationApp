@@ -71,6 +71,7 @@ const SignUpScreen = ({ navigation }) => {
           id: user.id,
           name: fullname,
           image_url: null,
+          email: user.email,
         },
       ]);
 
@@ -179,32 +180,6 @@ const SignUpScreen = ({ navigation }) => {
           <Pressable style={styles.signInBtn} onPress={handleCreateAccount}>
             <Text style={styles.signInText}>Create Account</Text>
           </Pressable>
-
-          {/* continue text */}
-          {/* <View style={styles.continueText}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.orText}>OR CONTINUE WITH</Text>
-            <View style={styles.dividerLine} />
-          </View> */}
-
-          {/* google button */}
-          {/* <View style={styles.btns}>
-            <Pressable style={styles.googleBtn}>
-              <Image
-                source={require("../../assest/images/google-logo.png")}
-                style={styles.logoImage}
-              />
-              <Text style={styles.btnText}>Google</Text>
-            </Pressable>
-
-            <Pressable style={styles.googleBtn}>
-              <Image
-                source={require("../../assest/images/apple-logo.png")}
-                style={styles.logoImage}
-              />
-              <Text style={styles.btnText}>ios</Text>
-            </Pressable>
-          </View> */}
         </View>
 
         {/* bottom section */}

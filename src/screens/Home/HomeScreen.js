@@ -183,23 +183,8 @@ const HomeScreen = ({ navigation }) => {
               </Text>
               <View style={styles.activeBtn}></View>
               <Text style={styles.quote}>
-                {allTracks.length > 0
-                  ? allTracks[0].catname
-                  : "Mindfulness"}
+                {allTracks.length > 0 ? allTracks[0].catname : "Mindfulness"}
               </Text>
-
-              {allTracks.length > 0 && (
-                <View style={styles.featuredTrackInfo}>
-                  <Ionicons
-                    name="musical-notes-outline"
-                    size={moderateScale(14)}
-                    color="#20DF60"
-                  />
-                  <Text style={styles.featuredTrackCount}>
-                    Track 1 of {allTracks.length}
-                  </Text>
-                </View>
-              )}
 
               <TouchableOpacity
                 style={styles.btnContainer}
@@ -235,9 +220,7 @@ const HomeScreen = ({ navigation }) => {
               color="#20DF60"
               size={24}
             />
-            <Text style={styles.quickStatsText}>
-              {streakCount} Day Streak
-            </Text>
+            <Text style={styles.quickStatsText}>{streakCount} Day Streak</Text>
           </View>
         </View>
 
