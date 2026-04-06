@@ -148,7 +148,7 @@ const HomeScreen = ({ navigation }) => {
             source={
               allTracks.length > 0 && allTracks[0].thumbnail
                 ? { uri: allTracks[0].thumbnail }
-                : require("../../../assets/images/background.png")
+                : require("../../../assets/images/loader.png")
             }
             style={styles.backgroundImage}
             resizeMode="cover"

@@ -47,7 +47,7 @@ function AppContent() {
           streakCount: streakData.streak_count || 0,
           totalSessions: streakData.total_sessions || 0,
           totalMinutes: streakData.total_minutes || 0,
-        })
+        }),
       );
     } catch (err) {
       console.log("Auto-login: failed to restore profile", err.message);
@@ -78,9 +78,11 @@ function AppContent() {
       const { data } = await supabase.auth.getSession();
       setSession(data.session);
 
+      setLoading(false);
+
       // If session exists, restore user profile + streak to Redux
       if (data.session?.user) {
-        await restoreUserProfile(data.session.user.id);
+        restoreUserProfile(data.session.user.id);
       }
     } catch (err) {
       console.log("Session check failed:", err.message);
@@ -136,4 +138,3 @@ export default function App() {
     </Provider>
   );
 }
-
