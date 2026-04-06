@@ -2,6 +2,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import { useRef, useState } from "react";
 import {
+  Alert,
   Animated,
   KeyboardAvoidingView,
   Platform,
@@ -14,12 +15,14 @@ import {
   View,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import { sendOtp, verifyOtp } from "../../services/authApi";
 import {
   getScreenWidth,
   moderateScale,
   scale,
   verticalScale,
 } from "../../utility/helpers";
+import { supabase } from "../../utility/supabase";
 
 const width = getScreenWidth();
 
@@ -70,26 +73,66 @@ const ForgotPasswordScreen = ({ navigation }) => {
     });
   };
 
-  const handleSendCode = () => {
-    if (email.trim()) {
+  const handleSendCode = async () => {
+    try {
+      if (!email.trim()) {
+        Alert.alert("Enter mail");
+        return;
+      }
+
+      const res = await sendOtp(email);
+      console.log("Sending OTP for:", email);
+      Alert.alert(res.data.message || "OTP sent 📧");
       animateTransition(() => setStep(2));
+    } catch (error) {
+      Alert.alert(error.message);
     }
   };
 
-  const handleVerifyOtp = () => {
+  const handleVerifyOtp = async () => {
     const otpCode = otp.join("");
-    if (otpCode.length === 4) {
+
+    if (otpCode.length !== 4) {
+      Alert.alert("Enter complete OTP");
+      return;
+    }
+
+    try {
+      const res = await verifyOtp(email, otpCode);
+
+      Alert.alert(res.data.message || "OTP Verified ✅");
       animateTransition(() => setStep(3));
+    } catch (error) {
+      Alert.alert(error.message);
     }
   };
 
-  const handleResetPassword = () => {
-    if (newPassword && confirmPassword && newPassword === confirmPassword) {
+  const handleResetPassword = async () => {
+    if (!newPassword || !confirmPassword) {
+      Alert.alert("Fill all fields");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      Alert.alert("Passwords do not match");
+      return;
+    }
+
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    if (error) {
+      Alert.alert(error.message);
+    } else {
+      Alert.alert("Password updated successfully ✅");
       navigation.navigate("SignIn");
     }
   };
 
   const handleOtpChange = (value, index) => {
+    if (!/^[0-9]?$/.test(value)) return;
+
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
@@ -103,6 +146,21 @@ const ForgotPasswordScreen = ({ navigation }) => {
   const handleOtpKeyPress = (e, index) => {
     if (e.nativeEvent.key === "Backspace" && !otp[index] && index > 0) {
       otpRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleResendOtp = async () => {
+    try {
+      if (!email.trim()) {
+        Alert.alert("Enter mail");
+        return;
+      }
+
+      const res = await sendOtp(email);
+      Alert.alert(res.data.message || "OTP sent 📧");
+      animateTransition(() => setStep(2));
+    } catch (error) {
+      Alert.alert(error.message);
     }
   };
 
@@ -291,7 +349,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
               {/* Resend Timer */}
               <View style={styles.resendContainer}>
                 <Text style={styles.resendText}>Didn't receive the code? </Text>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={handleResendOtp}>
                   <Text style={styles.resendLink}>Resend</Text>
                 </TouchableOpacity>
               </View>

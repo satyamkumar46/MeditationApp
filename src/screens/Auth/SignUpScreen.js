@@ -81,8 +81,7 @@ const SignUpScreen = ({ navigation }) => {
 
       Alert.alert("Success", "Account created successfully");
 
-      dispatch(setName(user.name));
-      navigation.navigate("SignIn");
+      dispatch(setName(fullname));
     } catch (error) {
       Alert.alert("Error", error.message);
     }

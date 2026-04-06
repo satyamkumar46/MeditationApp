@@ -1,4 +1,6 @@
 import {
+  Alert,
+  Linking,
   Platform,
   ScrollView,
   StatusBar,
@@ -8,10 +10,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import Feather from "react-native-vector-icons/Feather";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import Feather from "react-native-vector-icons/Feather";
-import { scale, verticalScale, moderateScale } from "../../utility/helpers";
+import { moderateScale, scale, verticalScale } from "../../utility/helpers";
 
 const FAQ_CATEGORIES = [
   {
@@ -50,6 +52,24 @@ const COMMON_QUESTIONS = [
   "Resetting my password",
 ];
 
+const contactSupport = () => {
+  const email = "reactnative158@gmail.com";
+  const subject = "Support Request - Meditation App";
+  const body = "Hi,\n\nI need help with:\n";
+
+  const url = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+  Linking.canOpenURL(url)
+    .then((supported) => {
+      if (!supported) {
+        Alert.alert("Error", "No email app found");
+      } else {
+        return Linking.openURL(url);
+      }
+    })
+    .catch((err) => console.error(err));
+};
+
 const SupportScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
@@ -61,7 +81,11 @@ const SupportScreen = ({ navigation }) => {
           onPress={() => navigation.goBack()}
           style={styles.backBtn}
         >
-          <Ionicons name="arrow-back" size={moderateScale(24)} color="#F1F5F9" />
+          <Ionicons
+            name="arrow-back"
+            size={moderateScale(24)}
+            color="#F1F5F9"
+          />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Support</Text>
       </View>
@@ -136,7 +160,7 @@ const SupportScreen = ({ navigation }) => {
             difficulties.
           </Text>
 
-          <TouchableOpacity style={styles.emailBtn}>
+          <TouchableOpacity style={styles.emailBtn} onPress={contactSupport}>
             <MaterialCommunityIcons
               name="email-outline"
               size={moderateScale(20)}

@@ -13,4 +13,8 @@ export const ENDPOINTS = {
   SOUNDS: {
     LIST: "/sounds",
   },
+  AUTH: {
+    LIST: "/auth",
+    SEND_OTP: "/auth/send-otp",
+  },
 };
