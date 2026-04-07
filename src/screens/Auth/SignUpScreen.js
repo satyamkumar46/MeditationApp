@@ -179,6 +179,32 @@ const SignUpScreen = ({ navigation }) => {
           <Pressable style={styles.signInBtn} onPress={handleCreateAccount}>
             <Text style={styles.signInText}>Create Account</Text>
           </Pressable>
+
+          {/* continue text */}
+          <View style={styles.continueText}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.orText}>OR CONTINUE WITH</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          {/* google button */}
+          <View style={styles.btns}>
+            <Pressable style={styles.googleBtn}>
+              <Image
+                source={require("../../../assets/images/google-logo.png")}
+                style={styles.logoImage}
+              />
+              <Text style={styles.btnText}>Google</Text>
+            </Pressable>
+
+            <Pressable style={styles.googleBtn}>
+              <Image
+                source={require("../../../assets/images/apple-logo.png")}
+                style={styles.logoImage}
+              />
+              <Text style={styles.btnText}>ios</Text>
+            </Pressable>
+          </View>
         </View>
 
         {/* bottom section */}
@@ -375,7 +401,7 @@ const styles = StyleSheet.create({
   bottomBar: {
     flexDirection: "row",
     width: "100%",
-    paddingVertical: verticalScale(140),
+    paddingVertical: verticalScale(70),
     justifyContent: "center",
     alignItems: "center",
     gap: scale(8),
