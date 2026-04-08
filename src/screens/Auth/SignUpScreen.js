@@ -16,6 +16,7 @@ import {
 import Octicons from "react-native-vector-icons/Octicons";
 import { useDispatch } from "react-redux";
 import { setName } from "../../features/slices/userSlice";
+import { googleLogin } from "../../services/authGoogle";
 import {
   getScreenWidth,
   moderateScale,
@@ -84,6 +85,16 @@ const SignUpScreen = ({ navigation }) => {
       dispatch(setName(fullname));
     } catch (error) {
       Alert.alert("Error", error.message);
+    }
+  };
+
+  const handleGoogleSignUp = async () => {
+    const user = await googleLogin();
+
+    const res = await fetch("auth/google/signup");
+
+    if (res.status === 400) {
+      Alert.alert("User already exists, please login");
     }
   };
 
@@ -189,7 +200,7 @@ const SignUpScreen = ({ navigation }) => {
 
           {/* google button */}
           <View style={styles.btns}>
-            <Pressable style={styles.googleBtn}>
+            <Pressable style={styles.googleBtn} onPress={handleGoogleSignUp}>
               <Image
                 source={require("../../../assets/images/google-logo.png")}
                 style={styles.logoImage}

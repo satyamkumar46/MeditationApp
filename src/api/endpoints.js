@@ -15,6 +15,6 @@ export const ENDPOINTS = {
   },
   AUTH: {
     LIST: "/auth",
-    SEND_OTP: "/auth/send-otp",
+    SEND_OTP: "/auth/send-otp", 
   },
 };

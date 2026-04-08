@@ -17,8 +17,7 @@
       "icon": "./assets/images/screen.png",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.sksatyam.MeditationApp",
-      "googleServicesFile": "./google-services.json"
+      "package": "com.sksatyam.MeditationApp"
     },
     "web": {
       "output": "static",
