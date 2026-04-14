@@ -43,7 +43,6 @@ const useSounds = () => {
     };
 
     loadData();
-    fetchSounds();
   }, []);
 
   return {
