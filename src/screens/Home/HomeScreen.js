@@ -263,7 +263,7 @@ const HomeScreen = ({ navigation }) => {
                   />
                   <View style={styles.recommendedBadge}>
                     <Text style={styles.recommendedBadgeText}>
-                      {track?.catname?.toUpperCase()}
+                      {track?.catname ? track.catname.toUpperCase() : ""}
                     </Text>
                   </View>
                 </View>

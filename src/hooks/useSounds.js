@@ -8,9 +8,13 @@ const useSounds = () => {
   const [error, setError] = useState(null);
   const [initialLoading, setInitialLoading] = useState(true);
 
-  const fetchSounds = async () => {
+  const fetchSounds = async (isInitial = false) => {
     try {
-      setLoading(true);
+      if (isInitial) {
+        setInitialLoading(true);
+      } else {
+        setLoading(true);
+      }
       setError(null);
 
       const data = await soundService.getAllSounds();
@@ -37,7 +41,7 @@ const useSounds = () => {
   useEffect(() => {
     const loadData = async () => {
       await Promise.all([
-        fetchSounds(),
+        fetchSounds(true),
         new Promise((res) => setTimeout(res, 1500)),
       ]);
     };
