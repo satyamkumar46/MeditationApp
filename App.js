@@ -91,45 +91,12 @@ function AppContent() {
     }
   };
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <StatusBar barStyle="light-content" backgroundColor="#112116" />
-        <ActivityIndicator size="large" color="#20DF60" />
-        <Text style={styles.loadingText}>Serenity</Text>
-        <Text style={styles.loadingSubText}>Finding your calm...</Text>
-      </View>
-    );
-  }
-
   return (
     <NavigationContainer>
       <StackNavigator session={session} setSession={setSession} />
     </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: "#112116",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 12,
-  },
-  loadingText: {
-    color: "#20DF60",
-    fontSize: 28,
-    fontWeight: "bold",
-    letterSpacing: 1,
-    marginTop: 16,
-  },
-  loadingSubText: {
-    color: "#94A3B8",
-    fontSize: 14,
-    fontWeight: "500",
-  },
-});
 
 export default function App() {
   return (
