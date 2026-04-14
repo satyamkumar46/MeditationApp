@@ -19,7 +19,7 @@ import TimerScreen from "../screens/Timer/TimerScreen";
 import TopTeachersScreen from "../screens/TopTeachers/TopTeachersScreen";
 import TabNavigator from "./TabNavigator";
 
-export default function StackNavigator({ session }) {
+export default function StackNavigator({ session, setSession }) {
   const stack = createNativeStackNavigator();
 
   return (
@@ -39,20 +39,19 @@ export default function StackNavigator({ session }) {
             component={SplashScreen}
             options={{ headerShown: false }}
           />
-
           <stack.Screen
             name="Onboarding"
             component={OnboardingScreen}
             options={{ headerShown: false }}
           />
-
           <stack.Screen
             name="SignIn"
-            component={SignInScreen}
             options={{
               headerShown: false,
             }}
-          />
+          >
+            {(props) => <SignInScreen {...props} setSession={setSession} />}
+          </stack.Screen>
           <stack.Screen
             name="ForgotPassword"
             component={ForgotPasswordScreen}
@@ -69,7 +68,7 @@ export default function StackNavigator({ session }) {
       ) : (
         <>
           <stack.Screen
-            name="home"
+            name="HomeStack"
             component={TabNavigator}
             options={{ headerShown: false }}
           />

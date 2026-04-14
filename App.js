@@ -104,7 +104,7 @@ function AppContent() {
 
   return (
     <NavigationContainer>
-      <StackNavigator session={session} />
+      <StackNavigator session={session} setSession={setSession} />
     </NavigationContainer>
   );
 }

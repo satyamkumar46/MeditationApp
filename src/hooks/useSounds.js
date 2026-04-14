@@ -1,46 +1,56 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import soundService from "../services/soundService";
 
 const useSounds = () => {
   const [categories, setCategories] = useState([]);
   const [allTracks, setAllTracks] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [initialLoading, setInitialLoading] = useState(true);
 
-  const fetchSounds = useCallback(async () => {
+  const fetchSounds = async () => {
     try {
       setLoading(true);
       setError(null);
+
       const data = await soundService.getAllSounds();
       setCategories(data);
 
       // Flatten all tracks with category info
-      const tracks = [];
-      data.forEach((category) => {
-        category.tracks.forEach((track) => {
-          tracks.push({
-            ...track,
-            catname: category.catname,
-            categoryId: category._id,
-          });
-        });
+      const tracks = (data || []).flatMap((category) => {
+        if (!category?.tracks || !Array.isArray(category.tracks)) return [];
+        return category.tracks.map((track) => ({
+          ...track,
+          catname: category.catname || "Unknown",
+          categoryId: category._id,
+        }));
       });
       setAllTracks(tracks);
     } catch (err) {
       setError(err.message || "Failed to load sounds");
     } finally {
       setLoading(false);
+      setInitialLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
+    const loadData = async () => {
+      await Promise.all([
+        fetchSounds(),
+        new Promise((res) => setTimeout(res, 1500)),
+      ]);
+    };
+
+    loadData();
     fetchSounds();
-  }, [fetchSounds]);
+  }, []);
 
   return {
     categories,
     allTracks,
     loading,
+    initialLoading,
     error,
     refetch: fetchSounds,
   };

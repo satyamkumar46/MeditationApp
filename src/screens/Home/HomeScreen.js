@@ -52,7 +52,8 @@ const HomeScreen = ({ navigation }) => {
   const name = useSelector((state) => state.user.name);
   const profileImage = useSelector((state) => state.user.profileImage);
   const streakCount = useSelector((state) => state.user.streakCount);
-  const { allTracks, categories, loading, refetch } = useSounds();
+  const { allTracks, categories, loading, initialLoading, refetch } =
+    useSounds();
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = async () => {
@@ -69,12 +70,11 @@ const HomeScreen = ({ navigation }) => {
     return () => clearInterval(interval);
   }, []);
 
-  if (loading) {
+  if (initialLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <StatusBar barStyle="light-content" backgroundColor="#112116" />
         <ActivityIndicator size="large" color="#20DF60" />
-        <Text style={styles.loadingText}>Loading...</Text>
+        <Text style={styles.loadingText}>Preparing your calm space...</Text>
       </View>
     );
   }
@@ -146,12 +146,23 @@ const HomeScreen = ({ navigation }) => {
         <View style={styles.featuredSection}>
           <Image
             source={
-              allTracks.length > 0 && allTracks[0].thumbnail
-                ? { uri: allTracks[0].thumbnail }
-                : require("../../../assets/images/loader.png")
+              allTracks.length > 0 && allTracks[0]?.thumbnail ? (
+                <Image
+                  source={{ uri: allTracks[0]?.thumbnail }}
+                  style={styles.backgroundImage}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View style={styles.fallbackContainer}>
+                  <MaterialCommunityIcons
+                    name="arrow-down-circle-outline"
+                    size={40}
+                    color="#20DF60"
+                  />
+                  <Text style={styles.fallbackText}>Pull to refresh</Text>
+                </View>
+              )
             }
-            style={styles.backgroundImage}
-            resizeMode="cover"
           />
 
           <View style={styles.content}>
@@ -162,7 +173,9 @@ const HomeScreen = ({ navigation }) => {
 
             <View style={styles.mainHeading}>
               <Text style={styles.mainHeadingText}>
-                {allTracks.length > 0 ? allTracks[0].title : "Daily Calm"}
+                {allTracks.length > 0
+                  ? allTracks[0]?.title
+                  : "Stay calm, take a breath"}
               </Text>
             </View>
             <View style={styles.mainHeadingSummaryContainer}>
@@ -179,11 +192,11 @@ const HomeScreen = ({ navigation }) => {
                 style={styles.iconsStyle}
               />
               <Text style={styles.time}>
-                {allTracks.length > 0 ? allTracks[0].duration : "10 min"}
+                {allTracks.length > 0 ? allTracks[0]?.duration : "10 min"}
               </Text>
               <View style={styles.activeBtn}></View>
               <Text style={styles.quote}>
-                {allTracks.length > 0 ? allTracks[0].catname : "Mindfulness"}
+                {allTracks.length > 0 ? allTracks[0]?.catname : "Mindfulness"}
               </Text>
 
               <TouchableOpacity
@@ -240,26 +253,26 @@ const HomeScreen = ({ navigation }) => {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.recommendedScroll}
           >
-            {allTracks.slice(0, 5).map((track) => (
+            {allTracks.slice(0, 5).map((track, index) => (
               <TouchableOpacity
-                key={track._id}
+                key={track?._id ? track._id : `track-${index}`}
                 style={styles.recommendedCard}
                 onPress={() => navigation.navigate("Player", { track })}
               >
                 <View style={styles.recommendedImageContainer}>
                   <Image
-                    source={{ uri: track.thumbnail }}
+                    source={{ uri: track?.thumbnail }}
                     style={styles.recommendedImage}
                     resizeMode="cover"
                   />
                   <View style={styles.recommendedBadge}>
                     <Text style={styles.recommendedBadgeText}>
-                      {track.catname?.toUpperCase()}
+                      {track?.catname?.toUpperCase()}
                     </Text>
                   </View>
                 </View>
                 <Text style={styles.recommendedCardTitle} numberOfLines={1}>
-                  {track.title}
+                  {track?.title}
                 </Text>
                 <View style={styles.recommendedMeta}>
                   <MaterialCommunityIcons
@@ -268,7 +281,7 @@ const HomeScreen = ({ navigation }) => {
                     color="#20DF6099"
                   />
                   <Text style={styles.recommendedDuration}>
-                    {track.duration}
+                    {track?.duration}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -283,6 +296,7 @@ const HomeScreen = ({ navigation }) => {
 
         <View style={styles.exploreContainer}>
           {categories
+            .filter(Boolean)
             .reduce((rows, category, idx) => {
               if (idx % 2 === 0) {
                 rows.push([category]);
@@ -300,9 +314,9 @@ const HomeScreen = ({ navigation }) => {
                     : styles.thirdFourthContainer
                 }
               >
-                {row.map((category) => (
+                {row.map((category, index) => (
                   <TouchableOpacity
-                    key={category._id}
+                    key={category?._id ? category._id : `cat-${index}`}
                     style={styles.firstContainer}
                     onPress={() =>
                       navigation.navigate("CategoryDetail", {
@@ -404,6 +418,21 @@ const styles = StyleSheet.create({
   backgroundImage: {
     width: "100%",
     height: verticalScale(200),
+  },
+  fallbackContainer: {
+    width: "100%",
+    height: verticalScale(200),
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#064E3B1A",
+    borderBottomWidth: 1,
+    borderColor: "#20DF6026",
+  },
+  fallbackText: {
+    color: "#20DF60",
+    marginTop: verticalScale(8),
+    fontSize: moderateScale(14),
+    fontWeight: "600",
   },
   content: {
     paddingHorizontal: scale(15),

@@ -14,69 +14,29 @@ import {
   View,
 } from "react-native";
 import Octicons from "react-native-vector-icons/Octicons";
-import { useDispatch } from "react-redux";
-import { setName, setProfileImage } from "../../features/slices/userSlice";
 import {
   getScreenWidth,
   moderateScale,
   scale,
   verticalScale,
 } from "../../utility/helpers";
-import { supabase } from "../../utility/supabase";
 
 const width = getScreenWidth();
 
-const SignInScreen = ({ navigation }) => {
+const SignInScreen = ({ navigation, setSession }) => {
   const [email, setEmail] = useState("");
   const [password, setPasswod] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
-  const dispatch = useDispatch();
-
-  const handleSignIn = async () => {
+  const handleSignIn = () => {
     if (!email && !password) {
       Alert.alert("Missing Fields", "Please enter email and password");
-      return;
     } else if (!email) {
       Alert.alert("Missing Fields", "Email is required");
-      return;
     } else if (!password) {
       Alert.alert("Missing Fields", "Password is required");
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        Alert.alert("Login Error", error.message);
-        return;
-      }
-
-      const user = data.user;
-
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-
-      if (profileError) {
-        Alert.alert("Error", profileError.message);
-        return;
-      }
-
-      console.log("user profile", profile.name);
-
-      dispatch(setName(profile.name));
-      dispatch(setProfileImage(profile.image_url));
-
-      navigation.navigate("home");
-    } catch (error) {
-      Alert.alert("Error", err.message);
+    } else {
+      setSession({ user: email });
     }
   };
 
@@ -196,7 +156,6 @@ const SignInScreen = ({ navigation }) => {
               <Text style={styles.btnText}>ios</Text>
             </Pressable>
           </View>
-          
         </View>
 
         {/* bottom section */}
@@ -390,7 +349,7 @@ const styles = StyleSheet.create({
   bottomBar: {
     flexDirection: "row",
     width: "100%",
-    paddingVertical: verticalScale(90),
+    paddingVertical: verticalScale(30),
     justifyContent: "center",
     alignItems: "center",
     gap: scale(8),
