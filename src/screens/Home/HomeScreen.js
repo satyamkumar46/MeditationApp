@@ -144,26 +144,22 @@ const HomeScreen = ({ navigation }) => {
       >
         {/* feature section */}
         <View style={styles.featuredSection}>
-          <Image
-            source={
-              allTracks.length > 0 && allTracks[0]?.thumbnail ? (
-                <Image
-                  source={{ uri: allTracks[0]?.thumbnail }}
-                  style={styles.backgroundImage}
-                  resizeMode="cover"
-                />
-              ) : (
-                <View style={styles.fallbackContainer}>
-                  <MaterialCommunityIcons
-                    name="arrow-down-circle-outline"
-                    size={40}
-                    color="#20DF60"
-                  />
-                  <Text style={styles.fallbackText}>Pull to refresh</Text>
-                </View>
-              )
-            }
-          />
+          {allTracks.length > 0 && allTracks[0]?.thumbnail ? (
+            <Image
+              source={{ uri: allTracks[0].thumbnail }}
+              style={styles.backgroundImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={styles.fallbackContainer}>
+              <MaterialCommunityIcons
+                name="arrow-down-circle-outline"
+                size={40}
+                color="#20DF60"
+              />
+              <Text style={styles.fallbackText}>Pull to refresh</Text>
+            </View>
+          )}
 
           <View style={styles.content}>
             <View style={styles.fheadingContainer}>
