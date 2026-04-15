@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-export default function CustomTabBar({ state, descriptors, navigation }) {
+export default function CustomTabBar({ state, navigation }) {
   const insets = useSafeAreaInsets();
 
   return (
