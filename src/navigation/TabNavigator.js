@@ -1,12 +1,18 @@
 import { Ionicons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ExploreScreen from "../screens/Explore/ExploreScreen";
 import HomeScreen from "../screens/Home/HomeScreen";
 import LibraryScreen from "../screens/Library/LibraryScreen";
 import ProfileScreen from "../screens/Profile/ProfileScreen";
 
+const tab = createBottomTabNavigator();
+
 export default function TabNavigator() {
-  const tab = createBottomTabNavigator();
+  const insets = useSafeAreaInsets();
+
+  const MARGIN = 16;
 
   return (
     <tab.Navigator
@@ -33,18 +39,32 @@ export default function TabNavigator() {
         },
         tabBarStyle: {
           backgroundColor: "#0b2d1f",
-          borderTopColor: "#20DF601A",
+          borderTopWidth: 0,
           position: "absolute",
-          bottom: 20,
-          right: 30,
-          left: 30,
-          elevation: 10,
-          borderRadius: 40,
-          height: 70,
+          left: MARGIN,
+          right: MARGIN,
+          bottom: Platform.OS === "ios" ? insets.bottom + 10 : 16,
+          elevation: 12,
+          borderRadius: 32,
+          height: 65,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.3,
+          shadowRadius: 10,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
-          marginBottom: 5,
+          fontSize: 11,
+          marginTop: 1,
+          marginBottom: 0,
+        },
+        tabBarItemStyle: {
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        },
+        tabBarIconStyle: {
+          marginTop: 0,
+          marginBottom: 0,
         },
         tabBarInactiveTintColor: "#20DF6066",
         tabBarActiveTintColor: "#20DF60",

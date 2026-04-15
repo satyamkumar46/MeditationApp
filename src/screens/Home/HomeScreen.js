@@ -96,7 +96,7 @@ const HomeScreen = ({ navigation }) => {
           />
           <View style={styles.textContainer}>
             <Text style={styles.greet}>WELCOME</Text>
-            <Text style={styles.greet2}>{greet},</Text>
+            <Text style={styles.greet2}>{greet}</Text>
             <Text style={styles.nameTxt}>{name}</Text>
           </View>
           <View style={styles.icons}>
