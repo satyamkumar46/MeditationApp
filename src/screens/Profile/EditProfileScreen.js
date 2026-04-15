@@ -27,7 +27,6 @@ const EditProfileScreen = ({ navigation }) => {
   const dispatch = useDispatch();
 
   const profileImage = useSelector((state) => state.user.profileImage);
-  console.log("Redux Image:", profileImage);
 
   const openGallery = async () => {
     try {

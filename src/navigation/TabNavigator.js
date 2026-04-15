@@ -32,8 +32,19 @@ export default function TabNavigator() {
           return <Ionicons name={iconname} size={size} color={color} />;
         },
         tabBarStyle: {
-          backgroundColor: "#112116",
+          backgroundColor: "#0b2d1f",
           borderTopColor: "#20DF601A",
+          position: "absolute",
+          bottom: 20,
+          right: 30,
+          left: 30,
+          elevation: 10,
+          borderRadius: 40,
+          height: 70,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          marginBottom: 5,
         },
         tabBarInactiveTintColor: "#20DF6066",
         tabBarActiveTintColor: "#20DF60",

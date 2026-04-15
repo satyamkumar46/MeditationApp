@@ -34,16 +34,18 @@ const useSounds = () => {
       setError(err.message || "Failed to load sounds");
     } finally {
       setLoading(false);
-      setInitialLoading(false);
     }
   };
 
   useEffect(() => {
     const loadData = async () => {
-      await Promise.all([
-        fetchSounds(true),
-        new Promise((res) => setTimeout(res, 1500)),
-      ]);
+      setInitialLoading(true);
+
+      const miniDelay = new Promise((res) => setTimeout(res, 1200));
+      const apicall = fetchSounds(true);
+      await Promise.all([apicall, miniDelay]);
+
+      setInitialLoading(false);
     };
 
     loadData();
