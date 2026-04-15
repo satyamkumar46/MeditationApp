@@ -671,7 +671,7 @@ const styles = StyleSheet.create({
     color: "#F1F5F9",
   },
   newArrivalContainer: {
-    marginTop: verticalScale(10),
+    marginTop: verticalScale(15),
     paddingBottom: verticalScale(20),
   },
   newArrivalTextContainer: {

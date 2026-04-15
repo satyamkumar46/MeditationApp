@@ -6,9 +6,8 @@ import {
   StatusBar,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import Feather from "react-native-vector-icons/Feather";
 import Ionicons from "react-native-vector-icons/Ionicons";
@@ -43,21 +42,6 @@ const CollectionScreen = ({ navigation }) => {
           />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Popular Collection</Text>
-      </View>
-
-      {/* Search Bar */}
-      <View style={styles.searchBar}>
-        <Ionicons
-          name="search"
-          size={moderateScale(18)}
-          color="#20DF6066"
-          style={styles.searchIcon}
-        />
-        <TextInput
-          placeholder="Search meditations..."
-          placeholderTextColor="#20DF6066"
-          style={styles.searchInput}
-        />
       </View>
 
       <ScrollView

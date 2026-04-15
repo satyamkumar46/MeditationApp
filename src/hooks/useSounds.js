@@ -4,7 +4,7 @@ import soundService from "../services/soundService";
 const useSounds = () => {
   const [categories, setCategories] = useState([]);
   const [allTracks, setAllTracks] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [initialLoading, setInitialLoading] = useState(true);
 

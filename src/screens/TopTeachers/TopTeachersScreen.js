@@ -10,11 +10,16 @@ import {
   View,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import useTeachers from "../../hooks/useTeachers";
-import { scale, verticalScale, moderateScale } from "../../utility/helpers";
+import { moderateScale, scale, verticalScale } from "../../utility/helpers";
 
-const CATEGORIES = ["All", "Mindfulness", "Zen Master", "Breathwork", "Sleep Expert"];
+const CATEGORIES = [
+  "All",
+  "Mindfulness",
+  "Zen Master",
+  "Breathwork",
+  "Sleep Expert",
+];
 
 const TopTeachersScreen = ({ navigation }) => {
   const { teachers, loading, error } = useTeachers();
@@ -37,77 +42,108 @@ const TopTeachersScreen = ({ navigation }) => {
           onPress={() => navigation.goBack()}
           style={styles.backBtn}
         >
-          <Ionicons name="arrow-back" size={moderateScale(24)} color="#20DF60" />
+          <Ionicons
+            name="arrow-back"
+            size={moderateScale(24)}
+            color="#20DF60"
+          />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Top Teachers</Text>
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {/* Featured Teacher Hero */}
-        {teachers.length > 0 && (
-          <View style={styles.heroCard}>
-            <Image
-              source={{ uri: teachers[0].image }}
-              style={styles.heroImage}
-              resizeMode="cover"
-            />
-            <View style={styles.heroOverlay} />
-            <View style={styles.heroContent}>
-              <View style={styles.masterclassBadge}>
-                <Text style={styles.masterclassText}>MASTERCLASS</Text>
-              </View>
-              <Text style={styles.heroName}>{teachers[0].name}</Text>
-              <Text style={styles.heroMeta}>
-                {teachers[0].expertise} • {teachers[0].session} Sessions
-              </Text>
-              <View style={styles.heroBottom}>
-                <TouchableOpacity
-                  style={styles.viewProfileBtn}
-                  onPress={() => navigation.navigate("TeacherProfile", { teacher: teachers[0] })}
-                >
-                  <Text style={styles.viewProfileText}>View Profile</Text>
-                </TouchableOpacity>
-                <View style={styles.avatarStack}>
-                  {teachers.slice(1, 3).map((t, idx) => (
-                    <View
-                      key={t._id}
-                      style={[
-                        styles.stackAvatar,
-                        { zIndex: 3 - idx, marginLeft: idx > 0 ? scale(-10) : 0 },
-                      ]}
-                    >
-                      <Image
-                        source={{ uri: t.image }}
-                        style={styles.stackAvatarImg}
-                      />
-                    </View>
-                  ))}
-                  <View style={styles.stackCount}>
-                    <Text style={styles.stackCountText}>
-                      +{teachers.length - 3}
-                    </Text>
+      {/* Featured Teacher Hero */}
+      {teachers.length > 0 && (
+        <View style={styles.heroCard}>
+          <Image
+            source={{ uri: teachers[0].image }}
+            style={styles.heroImage}
+            resizeMode="cover"
+          />
+          <View style={styles.heroOverlay} />
+          <View style={styles.heroContent}>
+            <View style={styles.masterclassBadge}>
+              <Text style={styles.masterclassText}>MASTERCLASS</Text>
+            </View>
+            <Text style={styles.heroName}>{teachers[0].name}</Text>
+            <Text style={styles.heroMeta}>
+              {teachers[0].expertise} • {teachers[0].session} Sessions
+            </Text>
+            <View style={styles.heroBottom}>
+              <TouchableOpacity
+                style={styles.viewProfileBtn}
+                onPress={() =>
+                  navigation.navigate("TeacherProfile", {
+                    teacher: teachers[0],
+                  })
+                }
+              >
+                <Text style={styles.viewProfileText}>View Profile</Text>
+              </TouchableOpacity>
+              <View style={styles.avatarStack}>
+                {teachers.slice(1, 3).map((t, idx) => (
+                  <View
+                    key={t._id}
+                    style={[
+                      styles.stackAvatar,
+                      {
+                        zIndex: 3 - idx,
+                        marginLeft: idx > 0 ? scale(-10) : 0,
+                      },
+                    ]}
+                  >
+                    <Image
+                      source={{ uri: t.image }}
+                      style={styles.stackAvatarImg}
+                    />
                   </View>
+                ))}
+                <View style={styles.stackCount}>
+                  <Text style={styles.stackCountText}>
+                    +{teachers.length - 3}
+                  </Text>
                 </View>
               </View>
             </View>
           </View>
-        )}
-
-        {/* All Instructors */}
-        <View style={styles.instructorsHeader}>
-          <Text style={styles.instructorsTitle}>All Instructors</Text>
-          <TouchableOpacity>
-            <MaterialCommunityIcons
-              name="tune-vertical"
-              size={moderateScale(22)}
-              color="#94A3B8"
-            />
-          </TouchableOpacity>
         </View>
+      )}
 
+      {/* All Instructors */}
+      <View style={styles.instructorsHeader}>
+        <Text style={styles.instructorsTitle}>All Instructors</Text>
+      </View>
+
+      {/* Categories */}
+      <View style={styles.categoriesSection}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.categoriesScroll}
+        >
+          {CATEGORIES.map((cat, idx) => ( 
+            <TouchableOpacity
+              key={idx}
+              style={[ 
+                styles.categoryChip,
+                idx === 0 && styles.categoryChipActive,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.categoryChipText,
+                  idx === 0 && styles.categoryChipTextActive,
+                ]}
+              >
+                {cat}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
         {/* Instructor list */}
         <View style={styles.instructorList}>
           {error ? (
@@ -119,7 +155,9 @@ const TopTeachersScreen = ({ navigation }) => {
               <TouchableOpacity
                 key={teacher._id}
                 style={styles.instructorCard}
-                onPress={() => navigation.navigate("TeacherProfile", { teacher })}
+                onPress={() =>
+                  navigation.navigate("TeacherProfile", { teacher })
+                }
               >
                 <View style={styles.instructorAvatar}>
                   <Image
@@ -146,7 +184,9 @@ const TopTeachersScreen = ({ navigation }) => {
                 </View>
                 <TouchableOpacity
                   style={styles.arrowBtn}
-                  onPress={() => navigation.navigate("TeacherProfile", { teacher })}
+                  onPress={() =>
+                    navigation.navigate("TeacherProfile", { teacher })
+                  }
                 >
                   <Ionicons
                     name="chevron-forward"
@@ -157,35 +197,6 @@ const TopTeachersScreen = ({ navigation }) => {
               </TouchableOpacity>
             ))
           )}
-        </View>
-
-        {/* Categories */}
-        <View style={styles.categoriesSection}>
-          <Text style={styles.categoriesTitle}>CATEGORIES</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.categoriesScroll}
-          >
-            {CATEGORIES.map((cat, idx) => (
-              <TouchableOpacity
-                key={idx}
-                style={[
-                  styles.categoryChip,
-                  idx === 0 && styles.categoryChipActive,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.categoryChipText,
-                    idx === 0 && styles.categoryChipTextActive,
-                  ]}
-                >
-                  {cat}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
         </View>
       </ScrollView>
     </View>

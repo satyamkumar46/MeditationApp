@@ -11,7 +11,6 @@ import {
 } from "react-native";
 import Feather from "react-native-vector-icons/Feather";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import useSounds from "../../hooks/useSounds";
 import { moderateScale, scale, verticalScale } from "../../utility/helpers";
 
@@ -22,7 +21,7 @@ const TeacherProfileScreen = ({ navigation, route }) => {
   // Filter tracks that belong to this teacher (by matching teacher name)
   const teacherTracks = allTracks.filter(
     (track) =>
-      track.teacher?.name?.toLowerCase() === teacher?.name?.toLowerCase()
+      track.teacher?.name?.toLowerCase() === teacher?.name?.toLowerCase(),
   );
 
   const stats = [
@@ -73,22 +72,7 @@ const TeacherProfileScreen = ({ navigation, route }) => {
               />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Teacher Profile</Text>
-            <View style={styles.headerRight}>
-              <TouchableOpacity style={styles.headerBtn}>
-                <Feather
-                  name="share-2"
-                  size={moderateScale(20)}
-                  color="#F1F5F9"
-                />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.headerBtn}>
-                <MaterialCommunityIcons
-                  name="dots-vertical"
-                  size={moderateScale(22)}
-                  color="#F1F5F9"
-                />
-              </TouchableOpacity>
-            </View>
+            <View style={styles.headerRight}></View>
           </View>
 
           {/* Teacher info */}
@@ -136,14 +120,6 @@ const TeacherProfileScreen = ({ navigation, route }) => {
             />
             <Text style={styles.followBtnText}>Follow</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.messageBtn}>
-            <Ionicons
-              name="chatbubble-outline"
-              size={moderateScale(18)}
-              color="#F1F5F9"
-            />
-            <Text style={styles.messageBtnText}>Message</Text>
-          </TouchableOpacity>
         </View>
 
         {/* Bio */}
@@ -165,15 +141,14 @@ const TeacherProfileScreen = ({ navigation, route }) => {
         <View style={styles.sessionsSection}>
           <View style={styles.sessionsHeader}>
             <Text style={styles.sessionsTitle}>Top Sessions</Text>
-            <TouchableOpacity>
-              <Text style={styles.viewAllText}>VIEW ALL</Text>
-            </TouchableOpacity>
           </View>
 
           {tracksLoading ? (
             <View style={styles.sessionsLoadingContainer}>
               <ActivityIndicator size="small" color="#20DF60" />
-              <Text style={styles.sessionsLoadingText}>Loading sessions...</Text>
+              <Text style={styles.sessionsLoadingText}>
+                Loading sessions...
+              </Text>
             </View>
           ) : teacherTracks.length > 0 ? (
             <ScrollView
@@ -303,34 +278,6 @@ const TeacherProfileScreen = ({ navigation, route }) => {
               ))}
             </ScrollView>
           )}
-        </View>
-
-        {/* Upcoming Live */}
-        <View style={styles.liveSection}>
-          <Text style={styles.liveTitle}>Upcoming Live</Text>
-          <View style={styles.liveCard}>
-            <View style={styles.liveDateBox}>
-              <Text style={styles.liveDateMonth}>OCT</Text>
-              <Text style={styles.liveDateDay}>24</Text>
-            </View>
-            <View style={styles.liveInfo}>
-              <Text style={styles.liveEventTitle}>Full Moon Meditation</Text>
-              <Text style={styles.liveEventMeta}>
-                Live Session • 8:00 PM EST
-              </Text>
-              <View style={styles.liveJoinedRow}>
-                <View style={styles.liveJoinedDot} />
-                <Text style={styles.liveJoinedText}>340 JOINED</Text>
-              </View>
-            </View>
-            <TouchableOpacity style={styles.liveBellBtn}>
-              <Ionicons
-                name="notifications-outline"
-                size={moderateScale(20)}
-                color="#F1F5F9"
-              />
-            </TouchableOpacity>
-          </View>
         </View>
       </ScrollView>
     </View>
