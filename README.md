@@ -10,8 +10,6 @@ A modern mobile meditation application designed to help users reduce stress, imp
 * Clean UI/UX
 * Minimal and calming interface
 * Smooth navigation using modern mobile design principles
-*  OTP Verification
-*  Email-based OTP authentication for secure access
 *  API Integration
 *  Backend APIs integrated for authentication and user management
 
