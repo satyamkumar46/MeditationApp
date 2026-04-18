@@ -2,16 +2,21 @@
 A modern mobile meditation application designed to help users reduce stress, improve focus, and build a consistent mindfulness routine. The app provides guided meditation sessions, authentication features, and a smooth user experience.
 
 # Features
-* User Authentication
-* Email & password login/signup
-* Guided Meditation
-* Different meditation categories (Focus, Sleep, Relaxation)
-* Audio-based sessions for better user experience
-* Clean UI/UX
-* Minimal and calming interface
-* Smooth navigation using modern mobile design principles
-*  API Integration
-*  Backend APIs integrated for authentication and user management
+* Guided Meditation Sessions (Beginner to Advanced)
+* Breathing Exercises & Relaxation Techniques
+* Soothing Sounds & Music for Focus/Sleep
+* Meditation Timer with Custom Duration
+* Progress Tracking & Daily Streaks
+* Reminders & Notifications
+* User Authentication (Firebase / Auth System)
+* Clean & Minimal UI for Distraction-Free Experience
+
+# Tech Stack
+* Frontend: React Native / Expo
+* Backend: Node.js
+* Authentication: Supabase Auth
+* Database: MongoDB
+* State Management: Redux
 
 # ScreenShot 🎥
 
@@ -19,4 +24,17 @@ A modern mobile meditation application designed to help users reduce stress, imp
 https://github.com/user-attachments/assets/e3c479a5-4e64-4ca7-9d0a-7bf69456fa44
 
 
+# Installation
+
+* Clone the repository
+  - git clone 
+
+* Navigate into the project
+  - cd meditation-app
+
+* Install dependencies
+  - npm install
+
+* Start the app
+  - npm start
 
