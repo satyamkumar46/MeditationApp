@@ -34,8 +34,6 @@ const EditProfileScreen = ({ navigation }) => {
       const { status } =
         await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-      console.log("Permission status:", status);
-
       if (status !== "granted") {
         Alert.alert("Permission Denied", "Allow gallery access");
         return;
@@ -52,7 +50,7 @@ const EditProfileScreen = ({ navigation }) => {
         setSelectedImage(uri);
       }
     } catch (err) {
-      console.log("Gallery Error:", err);
+      Alert.alert("Error", err);
     }
   };
 
@@ -78,8 +76,6 @@ const EditProfileScreen = ({ navigation }) => {
       }
 
       if (selectedImage) {
-        // console.log("Selected:", selectedImage);
-
         const fileName = `${user.id}.jpg`;
 
         const response = await fetch(selectedImage);
@@ -198,22 +194,6 @@ const EditProfileScreen = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Email Field */}
-        <View style={styles.fieldContainer}>
-          <Text style={styles.fieldLabel}>Email</Text>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.textInput}
-              value={email}
-              onChangeText={setEmail}
-              placeholderTextColor="#F1F5F940"
-              placeholder="Enter your email"
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-          </View>
-        </View>
-
         {/* Bio Field */}
         <View style={styles.fieldContainer}>
           <Text style={styles.fieldLabel}>Bio</Text>
@@ -294,19 +274,6 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     resizeMode: "cover",
-  },
-  cameraBadge: {
-    position: "absolute",
-    bottom: moderateScale(4),
-    right: moderateScale(4),
-    width: moderateScale(32),
-    height: moderateScale(32),
-    borderRadius: moderateScale(16),
-    backgroundColor: "#20DF60",
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: "#112116",
   },
   changePhotoText: {
     color: "#20DF60",

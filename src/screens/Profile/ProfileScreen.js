@@ -33,13 +33,6 @@ const MENU_ITEMS = [
     label: "Notification Settings",
     hasArrow: true,
   },
-  {
-    id: "help",
-    icon: "help-circle-outline",
-    iconFamily: "Ionicons",
-    label: "Help & Support",
-    hasArrow: true,
-  },
 ];
 
 const formatNumber = (num) => {
@@ -61,6 +54,7 @@ const ProfileScreen = ({ navigation }) => {
     { label: "SESSIONS", value: formatNumber(totalSessions) },
     { label: "MINUTES", value: formatNumber(totalMinutes) },
     { label: "STREAK", value: `${streakCount}d` },
+    { label: "FOLLOWING", value: `${streakCount}d` },
   ];
 
   useEffect(() => {
@@ -73,7 +67,7 @@ const ProfileScreen = ({ navigation }) => {
             streakCount: data.streak_count || 0,
             totalSessions: data.total_sessions || 0,
             totalMinutes: data.total_minutes || 0,
-          })
+          }),
         );
       } catch (err) {
         console.error("Error loading profile stats:", err);
@@ -105,13 +99,7 @@ const ProfileScreen = ({ navigation }) => {
           />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Profile</Text>
-        <TouchableOpacity style={styles.headerIconBtn}>
-          {/* <Ionicons
-            name="settings-outline"
-            size={moderateScale(22)}
-            color="#F1F5F9"
-          /> */}
-        </TouchableOpacity>
+        <View style={styles.headerIconBtn}></View>
       </View>
 
       <ScrollView
@@ -137,13 +125,7 @@ const ProfileScreen = ({ navigation }) => {
         {/* Stats Section */}
         <View style={styles.statsContainer}>
           {stats.map((stat, index) => (
-            <View
-              key={stat.label}
-              style={[
-                styles.statCard,
-                index < stats.length - 1 && { marginRight: scale(10) },
-              ]}
-            >
+            <View key={stat.label} style={styles.statCard}>
               <Text style={styles.statLabel}>{stat.label}</Text>
               {loadingStats ? (
                 <ActivityIndicator
@@ -171,8 +153,6 @@ const ProfileScreen = ({ navigation }) => {
                   navigation.navigate("EditProfile");
                 } else if (item.id === "notifications") {
                   navigation.navigate("NotificationSettings");
-                } else if (item.id === "help") {
-                  navigation.navigate("Support");
                 }
               }}
             >
@@ -238,7 +218,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   scrollContent: {
-    paddingBottom: verticalScale(30),
+    paddingBottom: verticalScale(50),
   },
   avatarSection: {
     alignItems: "center",
@@ -273,18 +253,23 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
   },
   statsContainer: {
+    flexWrap: "wrap",
     flexDirection: "row",
+    justifyContent: "space-between",
     paddingHorizontal: scale(20),
-    marginBottom: verticalScale(30),
+    marginBottom: verticalScale(5),
   },
   statCard: {
-    flex: 1,
+    width: "48%",
+    aspectRatio: 1,
+    justifyContent: "flex-start",
     backgroundColor: "#0D3320",
     borderRadius: moderateScale(12),
     borderWidth: 1,
     borderColor: "#20DF6033",
     paddingVertical: verticalScale(16),
     paddingHorizontal: scale(16),
+    marginBottom: verticalScale(10),
   },
   statLabel: {
     color: "#20DF60",
@@ -301,6 +286,7 @@ const styles = StyleSheet.create({
   settingsSection: {
     paddingHorizontal: scale(20),
     marginBottom: verticalScale(10),
+    marginTop: verticalScale(-150),
   },
   settingsSectionTitle: {
     color: "#F1F5F966",
@@ -312,7 +298,7 @@ const styles = StyleSheet.create({
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: verticalScale(16),
+    paddingVertical: verticalScale(9),
   },
   menuIconContainer: {
     width: moderateScale(44),
@@ -333,7 +319,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: scale(20),
-    paddingVertical: verticalScale(16),
+    paddingVertical: verticalScale(-50),
   },
   logoutIconContainer: {
     width: moderateScale(44),

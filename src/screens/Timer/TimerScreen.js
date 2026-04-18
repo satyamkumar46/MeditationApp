@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { Audio } from "expo-av";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   AppState,
@@ -10,17 +11,16 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Audio } from "expo-av";
+import Svg, { Circle } from "react-native-svg";
+import Feather from "react-native-vector-icons/Feather";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import Feather from "react-native-vector-icons/Feather";
-import { scale, verticalScale, moderateScale } from "../../utility/helpers";
-import Svg, { Circle } from "react-native-svg";
 import {
   fetchStreak,
-  updateStreakInDB,
   updateSessionStatsInDB,
+  updateStreakInDB,
 } from "../../services/streakService";
+import { moderateScale, scale, verticalScale } from "../../utility/helpers";
 
 const DURATIONS = [
   { label: "1 min", value: 1 },
@@ -85,17 +85,17 @@ let globalStats = { totalSessions: 0, totalMinutes: 0 };
 
 const TimerScreen = ({ navigation }) => {
   const [selectedDuration, setSelectedDuration] = useState(
-    globalTimerState.selectedDuration
+    globalTimerState.selectedDuration,
   );
   const [selectedSound, setSelectedSound] = useState(
-    globalTimerState.selectedSound
+    globalTimerState.selectedSound,
   );
   const [isRunning, setIsRunning] = useState(globalTimerState.isRunning);
   const [isPaused, setIsPaused] = useState(globalTimerState.isPaused);
   const [timeRemaining, setTimeRemaining] = useState(() => {
     if (globalTimerState.isRunning && globalTimerState.startedAt) {
       const elapsed = Math.floor(
-        (Date.now() - globalTimerState.startedAt) / 1000
+        (Date.now() - globalTimerState.startedAt) / 1000,
       );
       return Math.max(globalTimerState.totalDuration - elapsed, 0);
     }
@@ -134,12 +134,9 @@ const TimerScreen = ({ navigation }) => {
       if (state === "active" && globalTimerState.isRunning) {
         // Recalculate remaining time
         const elapsed = Math.floor(
-          (Date.now() - globalTimerState.startedAt) / 1000
+          (Date.now() - globalTimerState.startedAt) / 1000,
         );
-        const remaining = Math.max(
-          globalTimerState.totalDuration - elapsed,
-          0
-        );
+        const remaining = Math.max(globalTimerState.totalDuration - elapsed, 0);
         if (remaining <= 0) {
           onTimerComplete();
         } else {
@@ -165,12 +162,9 @@ const TimerScreen = ({ navigation }) => {
     tickRef.current = setInterval(() => {
       if (globalTimerState.isRunning && globalTimerState.startedAt) {
         const elapsed = Math.floor(
-          (Date.now() - globalTimerState.startedAt) / 1000
+          (Date.now() - globalTimerState.startedAt) / 1000,
         );
-        const remaining = Math.max(
-          globalTimerState.totalDuration - elapsed,
-          0
-        );
+        const remaining = Math.max(globalTimerState.totalDuration - elapsed, 0);
         setTimeRemaining(remaining);
 
         if (remaining <= 0) {
@@ -262,7 +256,7 @@ const TimerScreen = ({ navigation }) => {
       await updateSessionStatsInDB(
         globalStats.totalSessions,
         globalStats.totalMinutes,
-        today
+        today,
       );
     } catch (err) {
       console.error("Error saving session stats to Supabase:", err);
@@ -280,12 +274,14 @@ const TimerScreen = ({ navigation }) => {
         playsInSilentModeIOS: true,
       });
 
-      const ambient = AMBIENT_SOUNDS.find((s) => s.id === (soundId || selectedSound));
+      const ambient = AMBIENT_SOUNDS.find(
+        (s) => s.id === (soundId || selectedSound),
+      );
       if (!ambient) return;
 
       const { sound: newSound } = await Audio.Sound.createAsync(
         { uri: ambient.url },
-        { shouldPlay: true, isLooping: true, volume: isMuted ? 0 : 1 }
+        { shouldPlay: true, isLooping: true, volume: isMuted ? 0 : 1 },
       );
       globalSound = newSound;
     } catch (err) {
@@ -344,7 +340,7 @@ const TimerScreen = ({ navigation }) => {
 
   const pauseTimer = async () => {
     const elapsed = Math.floor(
-      (Date.now() - globalTimerState.startedAt) / 1000
+      (Date.now() - globalTimerState.startedAt) / 1000,
     );
     const remaining = Math.max(globalTimerState.totalDuration - elapsed, 0);
 
@@ -436,7 +432,7 @@ const TimerScreen = ({ navigation }) => {
           onPress: () =>
             setTimeRemaining(globalTimerState.selectedDuration * 60),
         },
-      ]
+      ],
     );
   }, [dailyGoal]);
 
@@ -495,13 +491,7 @@ const TimerScreen = ({ navigation }) => {
         <Text style={styles.headerTitle}>
           {isRunning ? "In Session" : "Meditation"}
         </Text>
-        <TouchableOpacity style={styles.settingsBtn}>
-          <Ionicons
-            name="settings-outline"
-            size={moderateScale(22)}
-            color="#94A3B8"
-          />
-        </TouchableOpacity>
+        <View style={styles.settingsBtn}></View>
       </View>
 
       <ScrollView
@@ -558,14 +548,9 @@ const TimerScreen = ({ navigation }) => {
               />
             </Svg>
             <View style={styles.timerTextContainer}>
-              <Text style={styles.timerText}>
-                {formatTime(timeRemaining)}
-              </Text>
+              <Text style={styles.timerText}>{formatTime(timeRemaining)}</Text>
               <Text
-                style={[
-                  styles.remainingText,
-                  isPaused && { color: "#FBBF24" },
-                ]}
+                style={[styles.remainingText, isPaused && { color: "#FBBF24" }]}
               >
                 {getStatusLabel()}
               </Text>
@@ -643,15 +628,14 @@ const TimerScreen = ({ navigation }) => {
                   // If timer is running, switch the sound live
                   if (isRunning) {
                     await cleanupSound();
-                    const { sound: newSound } =
-                      await Audio.Sound.createAsync(
-                        { uri: s.url },
-                        {
-                          shouldPlay: true,
-                          isLooping: true,
-                          volume: isMuted ? 0 : 1,
-                        }
-                      );
+                    const { sound: newSound } = await Audio.Sound.createAsync(
+                      { uri: s.url },
+                      {
+                        shouldPlay: true,
+                        isLooping: true,
+                        volume: isMuted ? 0 : 1,
+                      },
+                    );
                     globalSound = newSound;
                   }
                 }}
@@ -685,10 +669,7 @@ const TimerScreen = ({ navigation }) => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[
-              styles.playBtn,
-              isPaused && { backgroundColor: "#FBBF24" },
-            ]}
+            style={[styles.playBtn, isPaused && { backgroundColor: "#FBBF24" }]}
             onPress={handlePlayPress}
           >
             <Feather

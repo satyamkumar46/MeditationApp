@@ -512,9 +512,10 @@ const styles = StyleSheet.create({
   },
   searchPlaceholder: {
     fontSize: moderateScale(14),
+    flex: 1,
   },
   contentSection: {
-    height: verticalScale(800),
+    flex: 1,
   },
   popularCategoryContainer: {
     marginTop: verticalScale(15),
@@ -671,11 +672,10 @@ const styles = StyleSheet.create({
     color: "#F1F5F9",
   },
   newArrivalContainer: {
-    marginTop: verticalScale(15),
     paddingBottom: verticalScale(20),
   },
   newArrivalTextContainer: {
-    height: verticalScale(35),
+    height: verticalScale(30),
     marginHorizontal: scale(16),
     justifyContent: "center",
   },
@@ -741,7 +741,7 @@ const styles = StyleSheet.create({
     color: "#20DF6099",
   },
   songPlayBtnContainer: {
-    left: scale(35),
+    marginLeft: "auto",
     width: scale(60),
     justifyContent: "center",
     alignItems: "center",

@@ -13,7 +13,6 @@ import NotificationSettingScreen from "../screens/Profile/NotificationSettingScr
 import RecommendedScreen from "../screens/Recommended/RecommendedScreen";
 import RemainderScreen from "../screens/Remainder/RemainderScreen";
 import SleepScreen from "../screens/Sleep/SleepScreen";
-import SupportScreen from "../screens/Support/SupportScreen";
 import TeacherProfileScreen from "../screens/TeacherProfile/TeacherProfileScreen";
 import TimerScreen from "../screens/Timer/TimerScreen";
 import TopTeachersScreen from "../screens/TopTeachers/TopTeachersScreen";
@@ -85,11 +84,6 @@ export default function StackNavigator({ session, setSession }) {
           <stack.Screen
             name="Recommended"
             component={RecommendedScreen}
-            options={{ headerShown: false }}
-          />
-          <stack.Screen
-            name="Support"
-            component={SupportScreen}
             options={{ headerShown: false }}
           />
           <stack.Screen
