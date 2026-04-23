@@ -11,18 +11,39 @@ import {
 } from "react-native";
 import Feather from "react-native-vector-icons/Feather";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import { useDispatch, useSelector } from "react-redux";
+import { toggleFollowTeacher } from "../../features/slices/userSlice";
 import useSounds from "../../hooks/useSounds";
+import { followUser } from "../../services/userService";
 import { moderateScale, scale, verticalScale } from "../../utility/helpers";
 
 const TeacherProfileScreen = ({ navigation, route }) => {
   const teacher = route?.params?.teacher;
   const { allTracks, loading: tracksLoading } = useSounds();
 
+  const dispatch = useDispatch();
+
   // Filter tracks that belong to this teacher (by matching teacher name)
   const teacherTracks = allTracks.filter(
     (track) =>
       track.teacher?.name?.toLowerCase() === teacher?.name?.toLowerCase(),
   );
+
+  const followingTeachers = useSelector(
+    (state) => state.user.followingTeachers,
+  );
+
+  const isFollowing = followingTeachers.includes(teacher?._id);
+
+  const handleFollow = () => {
+
+    const res= await followUser(teacher._id);
+
+    if(res.success){
+      dispatch(toggleFollowTeacher(teacher._id));
+    }
+    
+  };
 
   const stats = [
     { label: "RATING", value: teacher?.rating?.toString() || "N/A" },
@@ -112,13 +133,26 @@ const TeacherProfileScreen = ({ navigation, route }) => {
 
         {/* Action Buttons */}
         <View style={styles.actionRow}>
-          <TouchableOpacity style={styles.followBtn}>
+          <TouchableOpacity
+            style={[
+              styles.followBtn,
+              isFollowing && { backgroundColor: "#20DF60" },
+            ]}
+            onPress={handleFollow}
+          >
             <Ionicons
-              name="person-add-outline"
+              name={isFollowing ? "checkmark" : "person-add-outline"}
               size={moderateScale(18)}
-              color="#20DF60"
+              color={isFollowing ? "#112116" : "#20DF60"}
             />
-            <Text style={styles.followBtnText}>Follow</Text>
+            <Text
+              style={[
+                styles.followBtnText,
+                isFollowing && { color: "#112116" },
+              ]}
+            >
+              {isFollowing ? "Following" : "Follow"}
+            </Text>
           </TouchableOpacity>
         </View>
 

@@ -1,14 +1,4 @@
-/**
- * API Client - Centralized HTTP client for all API requests.
- *
- * Features:
- * - Base URL configuration
- * - Default headers
- * - Request/Response interceptors
- * - Timeout handling
- * - Error normalization
- */
-
+import { getToken } from "../utility/storage";
 import { API_CONFIG } from "./config";
 
 class ApiClient {
@@ -27,25 +17,39 @@ class ApiClient {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
+    const token = await getToken();
+
     const config = {
       ...options,
       headers: {
         ...this.defaultHeaders,
+        ...(token && { Authorization: `Bearer ${token}` }),
         ...options.headers,
       },
       signal: controller.signal,
     };
+    if (config.body instanceof FormData) {
+      delete config.headers["Content-Type"];
+    }
 
     try {
-      const response = await fetch(url, config);
-      clearTimeout(timeoutId);
+      const executeRequest = async () => {
+        const response = await fetch(url, config);
 
-      if (!response.ok) {
-        throw await this._handleHttpError(response);
-      }
+        if (!response.ok) {
+          throw await this._handleHttpError(response);
+        }
 
-      const data = await response.json();
-      return { data, status: response.status, success: true };
+        const result = await this._retryRequest(
+          executeRequest,
+          API_CONFIG.RETRY_COUNT,
+          API_CONFIG.RETRY_DELAY,
+        );
+
+        clearTimeout(timeoutId);
+
+        return result;
+      };
     } catch (error) {
       clearTimeout(timeoutId);
 
@@ -57,12 +61,13 @@ class ApiClient {
         };
       }
 
-      if (error.code) {
+      if (error.status && error.status < 500) {
         throw error; // Already formatted error
       }
 
       throw {
-        message: error.message || "Network error. Please check your connection.",
+        message:
+          error.message || "Network error. Please check your connection.",
         code: "NETWORK_ERROR",
         status: 0,
       };
@@ -81,7 +86,8 @@ class ApiClient {
     }
 
     return {
-      message: errorBody.message || `Request failed with status ${response.status}`,
+      message:
+        errorBody.message || `Request failed with status ${response.status}`,
       code: `HTTP_${response.status}`,
       status: response.status,
       details: errorBody,
@@ -119,6 +125,18 @@ class ApiClient {
 
   delete(endpoint, options = {}) {
     return this.request(endpoint, { ...options, method: "DELETE" });
+  }
+
+  async _retryRequest(fn, retries, delay) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (retries <= 0) throw error;
+
+      await new Promise((res) => setTimeout(res, delay));
+
+      return this._retryRequest(fn, retries - 1, delay);
+    }
   }
 }
 

@@ -8,7 +8,7 @@ import CustomTabBar from "./CustomTabBar";
 
 const tab = createBottomTabNavigator();
 
-export default function TabNavigator() {
+export default function TabNavigator({ setSession }) {
   const insets = useSafeAreaInsets();
 
   const MARGIN = 16;
@@ -44,11 +44,12 @@ export default function TabNavigator() {
 
       <tab.Screen
         name="Profile"
-        component={ProfileScreen}
         options={{
           headerShown: false,
         }}
-      />
+      >
+        {(props) => <ProfileScreen {...props} setSession={setSession} />}
+      </tab.Screen>
     </tab.Navigator>
   );
 }

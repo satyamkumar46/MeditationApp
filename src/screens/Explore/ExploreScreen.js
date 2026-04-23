@@ -104,7 +104,10 @@ const ExploreScreen = ({ navigation }) => {
           </View>
           <TextInput
             placeholder="Search meditations, music, teachers"
-            style={styles.searchPlaceholder}
+            style={[
+              styles.searchPlaceholder,
+              { color: isSearching ? "#F1F5F9" : "#20DF6066" },
+            ]}
             placeholderTextColor={"#20DF6066"}
             value={searchQuery}
             onChangeText={setSearchQuery}

@@ -1,5 +1,4 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import ForgotPasswordScreen from "../screens/Auth/ForgotPasswordScreen";
 import SignInScreen from "../screens/Auth/SignInScreen";
 import SignUpScreen from "../screens/Auth/SignUpScreen";
 import CategoryDetailScreen from "../screens/CategoryDetail/CategoryDetailScreen";
@@ -18,7 +17,7 @@ import TimerScreen from "../screens/Timer/TimerScreen";
 import TopTeachersScreen from "../screens/TopTeachers/TopTeachersScreen";
 import TabNavigator from "./TabNavigator";
 
-export default function StackNavigator({ session, setSession }) {
+export default function StackNavigator({ session, setSession, isFirstLaunch }) {
   const stack = createNativeStackNavigator();
 
   return (
@@ -32,45 +31,53 @@ export default function StackNavigator({ session, setSession }) {
       }}
     >
       {!session ? (
-        <>
-          <stack.Screen
-            name="Splash"
-            component={SplashScreen}
-            options={{ headerShown: false }}
-          />
-          <stack.Screen
-            name="Onboarding"
-            component={OnboardingScreen}
-            options={{ headerShown: false }}
-          />
-          <stack.Screen
-            name="SignIn"
-            options={{
-              headerShown: false,
-            }}
-          >
-            {(props) => <SignInScreen {...props} setSession={setSession} />}
-          </stack.Screen>
-          <stack.Screen
-            name="ForgotPassword"
-            component={ForgotPasswordScreen}
-            options={{ headerShown: false }}
-          />
-          <stack.Screen
-            name="SignUp"
-            component={SignUpScreen}
-            options={{
-              headerShown: false,
-            }}
-          />
-        </>
+        isFirstLaunch ? (
+          <>
+            <stack.Screen
+              name="Splash"
+              component={SplashScreen}
+              options={{ headerShown: false }}
+            />
+            <stack.Screen
+              name="Onboarding"
+              component={OnboardingScreen}
+              options={{ headerShown: false }}
+            />
+            <stack.Screen
+              name="SignIn"
+              options={{
+                headerShown: false,
+              }}
+            >
+              {(props) => <SignInScreen {...props} setSession={setSession} />}
+            </stack.Screen>
+          </>
+        ) : (
+          <>
+            <stack.Screen
+              name="SignIn"
+              options={{
+                headerShown: false,
+              }}
+            >
+              {(props) => <SignInScreen {...props} setSession={setSession} />}
+            </stack.Screen>
+
+            <stack.Screen
+              name="SignUp"
+              options={{
+                headerShown: false,
+              }}
+            >
+              {(props) => <SignUpScreen {...props} setSession={setSession} />}
+            </stack.Screen>
+          </>
+        )
       ) : (
         <>
-          <stack.Screen
-            name="HomeStack"
-            component={TabNavigator}
-            options={{ headerShown: false }}
-          />
+          <stack.Screen name="HomeStack" options={{ headerShown: false }}>
+            {(props) => <TabNavigator {...props} setSession={setSession} />}
+          </stack.Screen>
           <stack.Screen
             name="EditProfile"
             component={EditProfileScreen}

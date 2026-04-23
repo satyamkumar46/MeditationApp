@@ -13,10 +13,10 @@ import {
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { useDispatch, useSelector } from "react-redux";
-import { setStreakData } from "../../features/slices/userSlice";
-import { fetchStreak } from "../../services/streakService";
+import { loadUserStats } from "../../features/actions/userActions";
+import { resetUser } from "../../features/slices/userSlice";
 import { moderateScale, scale, verticalScale } from "../../utility/helpers";
-import { supabase } from "../../utility/supabase";
+import { removeToken } from "../../utility/storage";
 
 const MENU_ITEMS = [
   {
@@ -40,12 +40,14 @@ const formatNumber = (num) => {
   return String(num);
 };
 
-const ProfileScreen = ({ navigation }) => {
+const ProfileScreen = ({ navigation, setSession }) => {
   const name = useSelector((state) => state.user.name);
   const profileImage = useSelector((state) => state.user.profileImage);
   const streakCount = useSelector((state) => state.user.streakCount);
   const totalSessions = useSelector((state) => state.user.totalSessions);
   const totalMinutes = useSelector((state) => state.user.totalMinutes);
+  const following = useSelector((state) => state.user.following);
+  const bio = useSelector((state) => state.user.bio);
   const dispatch = useDispatch();
 
   const [loadingStats, setLoadingStats] = useState(true);
@@ -54,33 +56,24 @@ const ProfileScreen = ({ navigation }) => {
     { label: "SESSIONS", value: formatNumber(totalSessions) },
     { label: "MINUTES", value: formatNumber(totalMinutes) },
     { label: "STREAK", value: `${streakCount}d` },
-    { label: "FOLLOWING", value: `${streakCount}d` },
+    { label: "FOLLOWING", value: `${following}` },
   ];
 
-  useEffect(() => {
-    const loadStats = async () => {
-      try {
-        setLoadingStats(true);
-        const data = await fetchStreak();
-        dispatch(
-          setStreakData({
-            streakCount: data.streak_count || 0,
-            totalSessions: data.total_sessions || 0,
-            totalMinutes: data.total_minutes || 0,
-          }),
-        );
-      } catch (err) {
-        console.error("Error loading profile stats:", err);
-      } finally {
-        setLoadingStats(false);
-      }
-    };
-    loadStats();
-  }, []);
-
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await removeToken();
+    dispatch(resetUser());
+    setSession(false);
   };
+
+  useEffect(() => {
+    const load = async () => {
+      setLoadingStats(true);
+      await dispatch(loadUserStats());
+      setLoadingStats(false);
+    };
+
+    load();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -119,7 +112,7 @@ const ProfileScreen = ({ navigation }) => {
             />
           </View>
           <Text style={styles.userName}>{name}</Text>
-          <Text style={styles.userRole}>MINDFULNESS PRACTITIONER</Text>
+          <Text style={styles.userRole}>{bio?.toUpperCase()}</Text>
         </View>
 
         {/* Stats Section */}

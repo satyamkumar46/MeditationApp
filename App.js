@@ -1,99 +1,113 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NavigationContainer } from "@react-navigation/native";
 import { useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  StatusBar,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
 import { Provider, useDispatch } from "react-redux";
-import {
-  resetUser,
-  setName,
-  setProfileImage,
-  setStreakData,
-} from "./src/features/slices/userSlice";
+import { resetUser, setUser } from "./src/features/slices/userSlice";
 import { store } from "./src/features/store/Store";
 import StackNavigator from "./src/navigation/StackNavigator";
-import { fetchStreak } from "./src/services/streakService";
-import { supabase } from "./src/utility/supabase";
+import { getProfile } from "./src/services/authService";
+import { fetchUsersFromApi, fetchUserStats } from "./src/services/userService";
+import { getUserFromCache, saveUserToCache } from "./src/utility/cache";
+import { getToken } from "./src/utility/storage";
 
 function AppContent() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isFirstLaunch, setIsFirstLaunch] = useState(null);
   const dispatch = useDispatch();
 
-  // Fetch and restore user profile + streak to Redux
-  const restoreUserProfile = async (userId) => {
-    try {
-      // Fetch profile
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .single();
-
-      if (!error && profile) {
-        dispatch(setName(profile.name || ""));
-        dispatch(setProfileImage(profile.image_url || null));
-        console.log("Auto-login: profile restored for", profile.name);
-      }
-
-      // Fetch streak data
-      const streakData = await fetchStreak();
-      dispatch(
-        setStreakData({
-          streakCount: streakData.streak_count || 0,
-          totalSessions: streakData.total_sessions || 0,
-          totalMinutes: streakData.total_minutes || 0,
-        }),
-      );
-    } catch (err) {
-      console.log("Auto-login: failed to restore profile", err.message);
-    }
-  };
-
   useEffect(() => {
-    checkSession();
+    const initApp = async () => {
+      try {
+        const token = await getToken();
 
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      async (_event, newSession) => {
-        setSession(newSession);
-        if (_event === "SIGNED_OUT") {
-          dispatch(resetUser());
-        } else if (newSession?.user) {
-          await restoreUserProfile(newSession.user.id);
+        if (!token) {
+          setSession(false);
+          return;
         }
-      },
-    );
 
-    return () => {
-      listener.subscription.unsubscribe();
+        const CachedUser = await getUserFromCache();
+        if (cachedUser) {
+          dispatch(setUser(cachedUser));
+          setSession(true);
+        }
+
+        const [profileRes, statsRes] = await Promise.all([
+          getProfile(),
+          fetchUserStats(),
+        ]);
+
+        if (profileRes?.success && statsRes?.success) {
+          const userData = {
+            name: profileRes.user.name,
+            photo: profileRes.user.photo,
+            bio: profileRes.user.bio,
+            following: profileRes.user.following,
+
+            streak: statsRes.user.streak,
+            session: statsRes.user.session,
+            minutes: statsRes.user.minutes,
+          };
+
+          dispatch(setUser(userData));
+          await saveUserToCache(userData);
+          setSession(true);
+        } else {
+          dispatch(resetUser());
+          setSession(false);
+        }
+      } catch (error) {
+        dispatch(resetUser());
+        setSession(false);
+      } finally {
+        setLoading(false);
+      }
     };
+
+    initApp();
   }, []);
 
-  const checkSession = async () => {
-    try {
-      const { data } = await supabase.auth.getSession();
-      setSession(data.session);
+  useEffect(() => {
+    const loadUser = async () => {
+      const cachedUser = await getUserFromCache();
 
-      setLoading(false);
+      dispatch(setUser(cachedUser));
 
-      // If session exists, restore user profile + streak to Redux
-      if (data.session?.user) {
-        restoreUserProfile(data.session.user.id);
+      const res = await fetchUsersFromApi();
+
+      if (res.success) {
+        dispatch(setUser(res.user));
+        await saveUserToCache(res.user);
       }
-    } catch (err) {
-      console.log("Session check failed:", err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    loadUser();
+  }, []);
+
+  useEffect(() => {
+    const checkFirstLaunch = async () => {
+      const value = await AsyncStorage.getItem("hasLaunched");
+
+      if (value === null) {
+        await AsyncStorage.setItem("hasLaunched", "true");
+        setIsFirstLaunch(true);
+      } else {
+        setIsFirstLaunch(false);
+      }
+    };
+
+    checkFirstLaunch();
+  }, []);
+
+  if (session === null) return null;
 
   return (
     <NavigationContainer>
-      <StackNavigator session={session} setSession={setSession} />
+      <StackNavigator
+        session={session}
+        setSession={setSession}
+        isFirstLaunch={isFirstLaunch}
+      />
     </NavigationContainer>
   );
 }

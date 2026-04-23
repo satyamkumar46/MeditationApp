@@ -1,10 +1,3 @@
-/**
- * API Endpoints
- *
- * All API endpoint paths in one place.
- * Organized by feature/resource for easy maintenance.
- */
-
 export const ENDPOINTS = {
   TEACHERS: {
     LIST: "/teachers",
@@ -12,9 +5,5 @@ export const ENDPOINTS = {
   },
   SOUNDS: {
     LIST: "/sounds",
-  },
-  AUTH: {
-    LIST: "/auth",
-    SEND_OTP: "/auth/send-otp", 
   },
 };

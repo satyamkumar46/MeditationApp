@@ -358,7 +358,7 @@ const PlayerScreen = ({ navigation, route }) => {
                 size={moderateScale(24)}
                 color="#F1F5F9"
               />
-              <Text style={styles.actionLabel}>TIMER</Text>
+              <Text style={styles.actionLabel}>SESSION</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.actionBtn}>

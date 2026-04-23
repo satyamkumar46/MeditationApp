@@ -14,9 +14,9 @@ import {
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useDispatch, useSelector } from "react-redux";
-import { setName, setProfileImage } from "../../features/slices/userSlice";
+import { setUser } from "../../features/slices/userSlice";
+import { updateProfileApi } from "../../services/userService";
 import { moderateScale, scale, verticalScale } from "../../utility/helpers";
-import { supabase } from "../../utility/supabase";
 
 const EditProfileScreen = ({ navigation }) => {
   const [inputName, setInputName] = useState("");
@@ -27,6 +27,8 @@ const EditProfileScreen = ({ navigation }) => {
   const dispatch = useDispatch();
 
   const profileImage = useSelector((state) => state.user.profileImage);
+
+  const user = useSelector((state) => state.user);
 
   const openGallery = async () => {
     try {
@@ -42,6 +44,8 @@ const EditProfileScreen = ({ navigation }) => {
       // Open gallery
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
         quality: 0.5,
       });
 
@@ -55,80 +59,33 @@ const EditProfileScreen = ({ navigation }) => {
   };
 
   const handleSave = async () => {
-    if (!inputName && !selectedImage) {
+    if (!inputName && !selectedImage && !bio) {
       return Alert.alert("No changes made");
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user || !user.id) {
-      Alert.alert("Error", "User not found");
-      return;
-    }
-
-    let updatedData = {};
-
     try {
-      if (inputName) {
-        updatedData.name = inputName;
-      }
+      const formData = new FormData();
+
+      if (inputName) formData.append("name", inputName);
+      if (bio) formData.append("bio", bio);
 
       if (selectedImage) {
-        const fileName = `${user.id}.jpg`;
-
-        const response = await fetch(selectedImage);
-        const arrayBuffer = await response.arrayBuffer();
-
-        const { error: uploadError } = await supabase.storage
-          .from("avatars")
-          .upload(fileName, arrayBuffer, {
-            contentType: "image/jpeg",
-            upsert: true,
-          });
-
-        if (uploadError) {
-          console.log(uploadError);
-          Alert.alert("Upload Error", uploadError.message);
-          return;
-        }
-
-        // public link
-        const { data } = supabase.storage
-          .from("avatars")
-          .getPublicUrl(fileName);
-
-        const imageUrl = data.publicUrl + "?t=" + new Date().getTime();
-        updatedData.image_url = imageUrl;
+        formData.append("photo", {
+          uri: selectedImage,
+          name: "profile.jpg",
+          type: "image/jpeg",
+        });
       }
 
-      const { error } = await supabase
-        .from("profiles")
-        .update(updatedData)
-        .eq("id", user.id);
+      const res = await updateProfileApi(formData);
 
-      if (error) {
-        Alert.alert("Error", error.message);
-        return;
+      if (res.success) {
+        dispatch(setUser(res.user));
+        Alert.alert("Success", "Profile updated successfully");
+        navigation.goBack();
       }
-
-      if (Object.keys(updatedData).length === 0) {
-        Alert.alert("No changes made");
-        return;
-      }
-
-      if (updatedData.name) {
-        dispatch(setName(inputName));
-      }
-
-      if (updatedData.image_url) {
-        dispatch(setProfileImage(updatedData.image_url));
-      }
-      Alert.alert("Success", "Profile updated ✅");
-      navigation.goBack();
     } catch (error) {
-      Alert.alert("Error", error.message);
+      Alert.alert("Error", "Something went wrong");
     }
   };
 

@@ -1,6 +1,7 @@
 import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Image,
   KeyboardAvoidingView,
@@ -15,23 +16,24 @@ import {
 } from "react-native";
 import Octicons from "react-native-vector-icons/Octicons";
 import { useDispatch } from "react-redux";
-import { setName } from "../../features/slices/userSlice";
-import { googleLogin } from "../../services/authGoogle";
+import { setUser } from "../../features/slices/userSlice";
+import { signup } from "../../services/authService";
 import {
   getScreenWidth,
   moderateScale,
   scale,
   verticalScale,
 } from "../../utility/helpers";
-import { supabase } from "../../utility/supabase";
+import { saveUserToCache } from "../../utility/cache";
 
 const width = getScreenWidth();
 
-const SignUpScreen = ({ navigation }) => {
-  const [fullname, setFullName] = useState("");
+const SignUpScreen = ({ navigation, setSession }) => {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPasswod] = useState("");
+  const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const dispatch = useDispatch();
 
@@ -40,58 +42,41 @@ const SignUpScreen = ({ navigation }) => {
   };
 
   const handleCreateAccount = async () => {
-    if (!email && !password && !fullname) {
+    if (!email || !password || !name) {
       Alert.alert("Missing Fields", "All are required");
-      return;
-    } else if (!email) {
-      Alert.alert("Missing Fields", "Email is required");
-      return;
-    } else if (!password) {
-      Alert.alert("Missing Fields", "Password is required");
-      return;
-    } else if (!fullname) {
-      Alert.alert("Missing Fields", "Name is required");
       return;
     }
 
     try {
-      const { data, error } = await supabase.auth.signUp({
+      setLoading(true);
+
+      const res = await signup({
+        name,
         email,
         password,
       });
 
-      if (error) {
-        Alert.alert("Error", error.message);
-        return;
+
+      if (res?.token) {
+        // auto login after signup
+        dispatch(setUser(res.user));
+        await saveUserToCache(res.user);
+        setSession(true);
+        Alert.alert("Account created successfully");
+      } else {
+        Alert.alert("Signup Failed", res.message);
       }
-
-      const user = data.user;
-
-      const { error: dbError } = await supabase.from("profiles").insert([
-        {
-          id: user.id,
-          name: fullname,
-          image_url: null,
-          email: user.email,
-        },
-      ]);
-
-      if (dbError) {
-        Alert.alert("DB Error", dbError.message);
-      }
-
-      Alert.alert("Success", "Account created successfully");
-
-      dispatch(setName(fullname));
     } catch (error) {
-      Alert.alert("Error", error.message);
+      Alert.alert("Error", "Network error");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleGoogleSignUp = async () => {
     const user = await googleLogin();
 
-    const res = await fetch("auth/google/signup");
+    const res = await fetch("auth/firebase");
 
     if (res.status === 400) {
       Alert.alert("User already exists, please login");
@@ -140,8 +125,8 @@ const SignUpScreen = ({ navigation }) => {
                 placeholder="Enter your name"
                 style={styles.placeholderText}
                 placeholderTextColor={"#94A3B8"}
-                value={fullname}
-                onChangeText={setFullName}
+                value={name}
+                onChangeText={setName}
               />
             </View>
           </View>
@@ -166,7 +151,7 @@ const SignUpScreen = ({ navigation }) => {
               <View style={styles.passwordTextContainer}>
                 <TextInput
                   placeholder="Enter your Password"
-                  onChangeText={setPasswod}
+                  onChangeText={setPassword}
                   value={password}
                   style={styles.placeholderText}
                   placeholderTextColor={"#94A3B8"}
@@ -187,8 +172,15 @@ const SignUpScreen = ({ navigation }) => {
           </View>
 
           {/* button */}
-          <Pressable style={styles.signInBtn} onPress={handleCreateAccount}>
-            <Text style={styles.signInText}>Create Account</Text>
+          <Pressable
+            style={[styles.signInBtn, loading && { opacity: 0.7 }]}
+            onPress={handleCreateAccount}
+          >
+            {loading ? (
+              <ActivityIndicator color="#112116" />
+            ) : (
+              <Text style={styles.signInText}>Create Account</Text>
+            )}
           </Pressable>
 
           {/* continue text */}

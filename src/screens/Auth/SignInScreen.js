@@ -1,6 +1,7 @@
 import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Image,
   KeyboardAvoidingView,
@@ -14,6 +15,9 @@ import {
   View,
 } from "react-native";
 import Octicons from "react-native-vector-icons/Octicons";
+import { useDispatch } from "react-redux";
+import { setUser } from "../../features/slices/userSlice";
+import { login } from "../../services/authService";
 import {
   getScreenWidth,
   moderateScale,
@@ -25,18 +29,40 @@ const width = getScreenWidth();
 
 const SignInScreen = ({ navigation, setSession }) => {
   const [email, setEmail] = useState("");
-  const [password, setPasswod] = useState("");
+  const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
-  const handleSignIn = () => {
+  const [loading, setLoading] = useState(false);
+
+  const dispatch = useDispatch();
+
+  const handleSignIn = async () => {
     if (!email && !password) {
       Alert.alert("Missing Fields", "Please enter email and password");
-    } else if (!email) {
+      return;
+    }
+    if (!email) {
       Alert.alert("Missing Fields", "Email is required");
-    } else if (!password) {
+      return;
+    }
+
+    if (!password) {
       Alert.alert("Missing Fields", "Password is required");
-    } else {
-      setSession({ user: email });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const res = await login({ email, password });
+
+      if (res?.token) {
+        dispatch(setUser(res.user));
+        setSession(true);
+      }
+    } catch (error) {
+      Alert.alert("Login Failed", res.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -98,7 +124,7 @@ const SignInScreen = ({ navigation, setSession }) => {
               <View style={styles.passwordTextContainer}>
                 <TextInput
                   placeholder="Enter your Password"
-                  onChangeText={setPasswod}
+                  onChangeText={setPassword}
                   value={password}
                   style={styles.placeholderText}
                   placeholderTextColor={"#94A3B8"}
@@ -118,17 +144,16 @@ const SignInScreen = ({ navigation, setSession }) => {
             </View>
           </View>
 
-          {/* forgot password */}
-          <Pressable
-            style={styles.forgotPassword}
-            onPress={() => navigation.navigate("ForgotPassword")}
-          >
-            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-          </Pressable>
-
           {/* button */}
-          <Pressable style={styles.signInBtn} onPress={handleSignIn}>
-            <Text style={styles.signInText}>Sign In</Text>
+          <Pressable
+            style={[styles.signInBtn, loading && { opacity: 0.7 }]}
+            onPress={handleSignIn}
+          >
+            {loading ? (
+              <ActivityIndicator color="#112116" />
+            ) : (
+              <Text style={styles.signInText}>Sign In</Text>
+            )}
           </Pressable>
 
           {/* continue text */}

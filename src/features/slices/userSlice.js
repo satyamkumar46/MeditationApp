@@ -6,43 +6,58 @@ const initialState = {
   streakCount: 0,
   totalSessions: 0,
   totalMinutes: 0,
+  following: 0,
+  bio: "",
+  followingTeachers: [],
 };
 
 const userSlice = createSlice({
   name: "user",
   initialState,
   reducers: {
-    setName: (state, action) => {
-      state.name = action.payload;
+    setUser: (state, action) => {
+      state.name = action.payload.name;
+      state.profileImage = action.payload.photo;
+      state.streakCount = action.payload.streak;
+      state.totalSessions = action.payload.session;
+      state.totalMinutes = action.payload.minutes;
+      state.following = action.payload.following;
+      state.bio = action.payload.bio;
     },
-    setProfileImage: (state, action) => {
-      state.profileImage = action.payload;
+    updateProfile: (state, action) => {
+      const { name, bio, photo } = action.payload;
+
+      if (name !== undefined && name.trim() !== "") {
+        state.name = name;
+      }
+
+      if (bio !== undefined && bio.trim() !== "") {
+        state.bio = bio;
+      }
+
+      if (photo !== undefined) {
+        state.profileImage = photo;
+      }
     },
-    setStreakCount: (state, action) => {
-      state.streakCount = action.payload;
-    },
-    setTotalSessions: (state, action) => {
-      state.totalSessions = action.payload;
-    },
-    setTotalMinutes: (state, action) => {
-      state.totalMinutes = action.payload;
-    },
-    setStreakData: (state, action) => {
-      state.streakCount = action.payload.streakCount ?? state.streakCount;
-      state.totalSessions = action.payload.totalSessions ?? state.totalSessions;
-      state.totalMinutes = action.payload.totalMinutes ?? state.totalMinutes;
+    toggleFollowTeacher: (state, action) => {
+      const teacherId = action.payload;
+
+      const alreadyFollowing = state.followingTeachers.includes(teacherId);
+
+      if (alreadyFollowing) {
+        state.followingTeachers = state.followingTeachers.filter(
+          (id) => id !== teacherId,
+        );
+        state.following -= 1;
+      } else {
+        state.followingTeachers.push(teacherId);
+        state.following += 1;
+      }
     },
     resetUser: () => initialState,
   },
 });
 
-export const {
-  setName,
-  setProfileImage,
-  setStreakCount,
-  setTotalSessions,
-  setTotalMinutes,
-  setStreakData,
-  resetUser,
-} = userSlice.actions;
+export const { setUser, resetUser, updateProfile, toggleFollowTeacher } =
+  userSlice.actions;
 export default userSlice.reducer;

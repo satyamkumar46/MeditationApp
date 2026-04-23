@@ -1,8 +1,7 @@
 import { Audio } from "expo-av";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   Alert,
-  AppState,
   Platform,
   ScrollView,
   StatusBar,
@@ -15,12 +14,12 @@ import Svg, { Circle } from "react-native-svg";
 import Feather from "react-native-vector-icons/Feather";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import {
-  fetchStreak,
-  updateSessionStatsInDB,
-  updateStreakInDB,
-} from "../../services/streakService";
+import { useDispatch } from "react-redux";
+import { setUser } from "../../features/slices/userSlice";
+import { addSession } from "../../services/userService";
 import { moderateScale, scale, verticalScale } from "../../utility/helpers";
+
+/* ---------------- CONSTANTS ---------------- */
 
 const DURATIONS = [
   { label: "1 min", value: 1 },
@@ -57,17 +56,15 @@ const AMBIENT_SOUNDS = [
 ];
 
 const TIPS = [
-  "Focus on your breath and let thoughts pass like clouds in the sky.",
-  "Try counting each exhale from 1 to 10, then start again.",
-  "Gently bring your focus back each time your mind wanders.",
-  "Feel the weight of your body and the support beneath you.",
-  "Notice the space between your thoughts — that is stillness.",
+  "Focus on your breath and let thoughts pass like clouds.",
+  "Count each exhale from 1 to 10.",
+  "Gently bring your focus back when mind wanders.",
+  "Feel your body supported.",
+  "Notice the space between thoughts.",
 ];
 
-// ============ MODULE-LEVEL STATE ============
-// These persist across screen mounts/unmounts so the timer & sound
-// keep running even when the user navigates away.
-let globalSound = null;
+/* ---------------- GLOBAL STATE ---------------- */
+
 let globalTimerState = {
   isRunning: false,
   isPaused: false,
@@ -79,263 +76,100 @@ let globalTimerState = {
   isMuted: false,
 };
 
-// In-memory streak & session tracking (persists across navigations, resets on app restart)
-let globalStreak = { count: 0, lastActivity: null };
-let globalStats = { totalSessions: 0, totalMinutes: 0 };
+/* ---------------- COMPONENT ---------------- */
 
 const TimerScreen = ({ navigation }) => {
+  const soundRef = useRef(null);
+  const tickRef = useRef(null);
+  const completedRef = useRef(false);
+
   const [selectedDuration, setSelectedDuration] = useState(
     globalTimerState.selectedDuration,
   );
   const [selectedSound, setSelectedSound] = useState(
     globalTimerState.selectedSound,
   );
-  const [isRunning, setIsRunning] = useState(globalTimerState.isRunning);
-  const [isPaused, setIsPaused] = useState(globalTimerState.isPaused);
-  const [timeRemaining, setTimeRemaining] = useState(() => {
-    if (globalTimerState.isRunning && globalTimerState.startedAt) {
-      const elapsed = Math.floor(
-        (Date.now() - globalTimerState.startedAt) / 1000,
-      );
-      return Math.max(globalTimerState.totalDuration - elapsed, 0);
-    }
-    if (globalTimerState.isPaused && globalTimerState.pausedRemaining != null) {
-      return globalTimerState.pausedRemaining;
-    }
-    return globalTimerState.selectedDuration * 60;
-  });
+  const [isRunning, setIsRunning] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+
   const [streak, setStreak] = useState(0);
   const [totalSessions, setTotalSessions] = useState(0);
   const [totalMinutes, setTotalMinutes] = useState(0);
-  const [dailyGoal] = useState(20);
   const [todayMinutes, setTodayMinutes] = useState(0);
-  const [isMuted, setIsMuted] = useState(globalTimerState.isMuted);
-  const [tip] = useState(TIPS[Math.floor(Math.random() * TIPS.length)]);
 
-  const tickRef = useRef(null);
+  const [timeRemaining, setTimeRemaining] = useState(selectedDuration * 60);
 
-  // ========== INIT ==========
-  useEffect(() => {
-    loadStreak();
-    loadDailyMinutes();
+  const tip = useState(() => TIPS[Math.floor(Math.random() * TIPS.length)])[0];
 
-    if (globalTimerState.isRunning) {
-      startDisplayTick();
-    }
+  /* ---------------- UI CONSTANTS (FIXED) ---------------- */
 
-    return () => {
-      clearDisplayTick();
-    };
-  }, []);
+  const circleSize = moderateScale(220);
+  const strokeWidth = moderateScale(6);
+  const radius = (circleSize - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
 
-  // Handle app coming back from background
-  useEffect(() => {
-    const sub = AppState.addEventListener("change", (state) => {
-      if (state === "active" && globalTimerState.isRunning) {
-        // Recalculate remaining time
-        const elapsed = Math.floor(
-          (Date.now() - globalTimerState.startedAt) / 1000,
-        );
-        const remaining = Math.max(globalTimerState.totalDuration - elapsed, 0);
-        if (remaining <= 0) {
-          onTimerComplete();
-        } else {
-          setTimeRemaining(remaining);
-        }
-      }
-    });
-    return () => sub.remove();
-  }, []);
+  const totalSeconds = selectedDuration * 60;
 
-  // Sync duration selection when not running
-  useEffect(() => {
-    if (!isRunning && !isPaused) {
-      setTimeRemaining(selectedDuration * 60);
-      globalTimerState.selectedDuration = selectedDuration;
-    }
-  }, [selectedDuration, isRunning, isPaused]);
+  const progressPercent =
+    totalSeconds > 0 ? (timeRemaining / totalSeconds) * 100 : 100;
 
-  // ========== DISPLAY TICK ==========
-  // This only updates the UI — the actual timer is time-based (startedAt)
-  const startDisplayTick = () => {
-    clearDisplayTick();
-    tickRef.current = setInterval(() => {
-      if (globalTimerState.isRunning && globalTimerState.startedAt) {
-        const elapsed = Math.floor(
-          (Date.now() - globalTimerState.startedAt) / 1000,
-        );
-        const remaining = Math.max(globalTimerState.totalDuration - elapsed, 0);
-        setTimeRemaining(remaining);
+  const strokeDashoffset =
+    circumference - (progressPercent / 100) * circumference;
 
-        if (remaining <= 0) {
-          onTimerComplete();
-        }
-      }
-    }, 1000);
+  const dailyGoal = 20;
+  const goalPercent = Math.min((todayMinutes / dailyGoal) * 100, 100);
+  const goalRemaining = Math.max(dailyGoal - todayMinutes, 0);
+
+  const getStatusLabel = () => {
+    if (isRunning) return "FOCUS";
+    if (isPaused) return "PAUSED";
+    return "READY";
   };
 
-  const clearDisplayTick = () => {
-    if (tickRef.current) {
-      clearInterval(tickRef.current);
-      tickRef.current = null;
-    }
+  const handlePlayPress = () => {
+    if (isRunning) pauseTimer();
+    else if (isPaused) resumeTimer();
+    else startTimer();
   };
 
-  // ========== STREAK LOGIC (Supabase + in-memory cache) ==========
-  const getDateStr = () => new Date().toISOString().split("T")[0]; // YYYY-MM-DD
-  const getYesterdayStr = () =>
-    new Date(Date.now() - 86400000).toISOString().split("T")[0];
+  /* ---------------- TIMER ---------------- */
 
-  const loadStreak = async () => {
-    try {
-      const data = await fetchStreak();
-      const today = getDateStr();
-      const yesterday = getYesterdayStr();
-
-      if (data.last_activity === today || data.last_activity === yesterday) {
-        globalStreak = {
-          count: data.streak_count || 0,
-          lastActivity: data.last_activity,
-        };
-        setStreak(data.streak_count || 0);
-      } else {
-        globalStreak = { count: 0, lastActivity: null };
-        setStreak(0);
-      }
-
-      globalStats = {
-        totalSessions: data.total_sessions || 0,
-        totalMinutes: data.total_minutes || 0,
-      };
-      setTotalSessions(data.total_sessions || 0);
-      setTotalMinutes(data.total_minutes || 0);
-    } catch (err) {
-      console.error("Error loading streak from Supabase:", err);
-    }
-  };
-
-  const updateStreak = async () => {
-    const today = getDateStr();
-
-    if (globalStreak.lastActivity === today) {
-      return globalStreak.count;
-    }
-
-    const yesterday = getYesterdayStr();
-    let newCount = 1;
-    if (globalStreak.lastActivity === yesterday) {
-      newCount = globalStreak.count + 1;
-    }
-
-    globalStreak = { count: newCount, lastActivity: today };
-    setStreak(newCount);
-
-    try {
-      await updateStreakInDB(newCount, today);
-    } catch (err) {
-      console.error("Error saving streak to Supabase:", err);
-    }
-
-    return newCount;
-  };
-
-  // ========== SESSION STATS (Supabase + in-memory cache) ==========
-  const loadDailyMinutes = () => {
-    // Already loaded in loadStreak
-  };
-
-  const addSessionStats = async (mins) => {
-    const today = getDateStr();
-    globalStats.totalSessions += 1;
-    globalStats.totalMinutes += mins;
-    setTotalSessions(globalStats.totalSessions);
-    setTotalMinutes(globalStats.totalMinutes);
-    setTodayMinutes((prev) => prev + mins);
-
-    try {
-      await updateSessionStatsInDB(
-        globalStats.totalSessions,
-        globalStats.totalMinutes,
-        today,
-      );
-    } catch (err) {
-      console.error("Error saving session stats to Supabase:", err);
-    }
-  };
-
-  // ========== SOUND LOGIC ==========
-  const playAmbientSound = async (soundId) => {
-    try {
-      await cleanupSound();
-
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: false,
-        staysActiveInBackground: true,
-        playsInSilentModeIOS: true,
-      });
-
-      const ambient = AMBIENT_SOUNDS.find(
-        (s) => s.id === (soundId || selectedSound),
-      );
-      if (!ambient) return;
-
-      const { sound: newSound } = await Audio.Sound.createAsync(
-        { uri: ambient.url },
-        { shouldPlay: true, isLooping: true, volume: isMuted ? 0 : 1 },
-      );
-      globalSound = newSound;
-    } catch (err) {
-      console.error("Error playing ambient sound:", err);
-    }
-  };
-
-  const cleanupSound = async () => {
-    if (globalSound) {
-      try {
-        await globalSound.stopAsync();
-        await globalSound.unloadAsync();
-      } catch (err) {
-        // ignore
-      }
-      globalSound = null;
-    }
-  };
-
-  const toggleMute = async () => {
-    const newMuted = !isMuted;
-    setIsMuted(newMuted);
-    globalTimerState.isMuted = newMuted;
-    if (globalSound) {
-      try {
-        await globalSound.setVolumeAsync(newMuted ? 0 : 1);
-      } catch (err) {
-        // ignore
-      }
-    }
-  };
-
-  // ========== TIMER LOGIC ==========
   const startTimer = async () => {
-    const totalSeconds = selectedDuration * 60;
+    completedRef.current = false;
 
-    // Update global state
-    globalTimerState.isRunning = true;
-    globalTimerState.isPaused = false;
-    globalTimerState.startedAt = Date.now();
-    globalTimerState.totalDuration = totalSeconds;
-    globalTimerState.selectedDuration = selectedDuration;
-    globalTimerState.selectedSound = selectedSound;
-    globalTimerState.pausedRemaining = null;
+    const total = selectedDuration * 60;
+
+    globalTimerState = {
+      ...globalTimerState,
+      isRunning: true,
+      isPaused: false,
+      startedAt: Date.now(),
+      totalDuration: total,
+      selectedDuration,
+      selectedSound,
+      pausedRemaining: null,
+    };
 
     setIsRunning(true);
     setIsPaused(false);
-    setTimeRemaining(totalSeconds);
+    setTimeRemaining(total);
 
-    // Play ambient sound
-    await playAmbientSound(selectedSound);
+    await playSound(selectedSound);
 
-    // Start display updates
-    startDisplayTick();
+    tickRef.current = setInterval(() => {
+      const elapsed = Math.floor(
+        (Date.now() - globalTimerState.startedAt) / 1000,
+      );
+      const remaining = Math.max(globalTimerState.totalDuration - elapsed, 0);
+
+      setTimeRemaining(remaining);
+
+      if (remaining <= 0 && !completedRef.current) {
+        completedRef.current = true;
+        onTimerComplete();
+      }
+    }, 1000);
   };
 
   const pauseTimer = async () => {
@@ -351,15 +185,11 @@ const TimerScreen = ({ navigation }) => {
     setIsRunning(false);
     setIsPaused(true);
     setTimeRemaining(remaining);
-    clearDisplayTick();
 
-    // Pause sound
-    if (globalSound) {
-      try {
-        await globalSound.pauseAsync();
-      } catch (err) {
-        // ignore
-      }
+    clearInterval(tickRef.current);
+
+    if (soundRef.current) {
+      await soundRef.current.pauseAsync();
     }
   };
 
@@ -370,111 +200,99 @@ const TimerScreen = ({ navigation }) => {
     globalTimerState.isPaused = false;
     globalTimerState.startedAt = Date.now();
     globalTimerState.totalDuration = remaining;
-    globalTimerState.pausedRemaining = null;
 
     setIsRunning(true);
     setIsPaused(false);
 
-    // Resume sound
-    if (globalSound) {
-      try {
-        await globalSound.playAsync();
-      } catch (err) {
-        // If sound was unloaded somehow, re-play
-        await playAmbientSound(globalTimerState.selectedSound);
-      }
-    } else {
-      await playAmbientSound(globalTimerState.selectedSound);
-    }
+    await playSound(globalTimerState.selectedSound);
 
-    startDisplayTick();
+    startTimer();
   };
 
   const resetTimer = async () => {
     globalTimerState.isRunning = false;
     globalTimerState.isPaused = false;
-    globalTimerState.startedAt = null;
-    globalTimerState.pausedRemaining = null;
 
     setIsRunning(false);
     setIsPaused(false);
     setTimeRemaining(selectedDuration * 60);
-    clearDisplayTick();
-    await cleanupSound();
+
+    clearInterval(tickRef.current);
+
+    if (soundRef.current) {
+      await soundRef.current.unloadAsync();
+      soundRef.current = null;
+    }
   };
 
+  /* ---------------- SOUND ---------------- */
+
+  const playSound = async (id) => {
+    const sound = AMBIENT_SOUNDS.find((s) => s.id === id);
+    if (!sound) return;
+
+    await Audio.setAudioModeAsync({
+      staysActiveInBackground: true,
+      playsInSilentModeIOS: true,
+    });
+
+    const { sound: newSound } = await Audio.Sound.createAsync(
+      { uri: sound.url },
+      { shouldPlay: true, isLooping: true, volume: isMuted ? 0 : 1 },
+    );
+
+    soundRef.current = newSound;
+  };
+
+  const toggleMute = async () => {
+    const m = !isMuted;
+    setIsMuted(m);
+
+    if (soundRef.current) {
+      await soundRef.current.setVolumeAsync(m ? 0 : 1);
+    }
+  };
+
+  /* ---------------- COMPLETE ---------------- */
+
   const onTimerComplete = useCallback(async () => {
-    if (!globalTimerState.isRunning && !globalTimerState.isPaused) return;
+    const minutes = globalTimerState.selectedDuration;
 
-    const minutesMeditated = globalTimerState.selectedDuration;
-
-    globalTimerState.isRunning = false;
-    globalTimerState.isPaused = false;
-    globalTimerState.startedAt = null;
-    globalTimerState.pausedRemaining = null;
+    const dispatch = useDispatch();
 
     setIsRunning(false);
     setIsPaused(false);
     setTimeRemaining(0);
-    clearDisplayTick();
-    await cleanupSound();
 
-    // Count as streak only on full completion — persist to Supabase
-    await addSessionStats(minutesMeditated);
-    const newStreak = await updateStreak();
+    clearInterval(tickRef.current);
 
-    Alert.alert(
-      "🧘 Session Complete!",
-      `Great job! You meditated for ${minutesMeditated} minutes.\n\n🔥 Streak: ${newStreak} day${newStreak !== 1 ? "s" : ""}\n📊 Total: ${globalStats.totalSessions} sessions • ${globalStats.totalMinutes} min`,
-      [
-        {
-          text: "Done",
-          onPress: () =>
-            setTimeRemaining(globalTimerState.selectedDuration * 60),
-        },
-      ],
-    );
-  }, [dailyGoal]);
-
-  const handlePlayPress = () => {
-    if (isRunning) {
-      pauseTimer();
-    } else if (isPaused) {
-      resumeTimer();
-    } else {
-      startTimer();
+    if (soundRef.current) {
+      await soundRef.current.unloadAsync();
+      soundRef.current = null;
     }
-  };
 
-  // ========== FORMATTING ==========
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
+    try {
+      const res = await addSession(minutes);
 
-  const circleSize = moderateScale(220);
-  const strokeWidth = moderateScale(6);
-  const radius = (circleSize - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const totalSeconds = isRunning
-    ? globalTimerState.totalDuration
-    : isPaused
-      ? globalTimerState.pausedRemaining || selectedDuration * 60
-      : selectedDuration * 60;
-  const progressPercent =
-    totalSeconds > 0 ? (timeRemaining / totalSeconds) * 100 : 100;
-  const strokeDashoffset =
-    circumference - (progressPercent / 100) * circumference;
+      if (res?.success) {
+        setStreak(res.user.streak || 0);
+        setTodayMinutes((p) => p + minutes);
 
-  const goalPercent = Math.min((todayMinutes / dailyGoal) * 100, 100);
-  const goalRemaining = Math.max(dailyGoal - todayMinutes, 0);
+        Alert.alert("Done", `🔥 Streak: ${res.user.streak}`);
+      }
 
-  const getStatusLabel = () => {
-    if (isRunning) return "FOCUS";
-    if (isPaused) return "PAUSED";
-    return "READY";
-  };
+      if (res?.success && res.user) {
+        dispatch(setUser(res.user));
+      }
+    } catch {
+      Alert.alert("Saved locally");
+    }
+  }, []);
+
+  const formatTime = (s) =>
+    `${Math.floor(s / 60)
+      .toString()
+      .padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`;
 
   return (
     <View style={styles.container}>
@@ -636,7 +454,7 @@ const TimerScreen = ({ navigation }) => {
                         volume: isMuted ? 0 : 1,
                       },
                     );
-                    globalSound = newSound;
+                    soundRef.current = newSound;
                   }
                 }}
               >
