@@ -1,5 +1,7 @@
+import auth, { GoogleAuthProvider } from "@react-native-firebase/auth";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { StatusBar } from "expo-status-bar";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -17,13 +19,14 @@ import {
 import Octicons from "react-native-vector-icons/Octicons";
 import { useDispatch } from "react-redux";
 import { setUser } from "../../features/slices/userSlice";
-import { login } from "../../services/authService";
+import { googleLogin, login } from "../../services/authService";
 import {
   getScreenWidth,
   moderateScale,
   scale,
   verticalScale,
 } from "../../utility/helpers";
+import { saveToken } from "../../utility/storage";
 
 const width = getScreenWidth();
 
@@ -35,6 +38,75 @@ const SignInScreen = ({ navigation, setSession }) => {
   const [loading, setLoading] = useState(false);
 
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    GoogleSignin.configure({
+      webClientId:
+        "989828482149-cu7fcl1sjp44g3ak56pmj194fs9btn9q.apps.googleusercontent.com",
+      offlineAccess: true,
+    });
+  }, []);
+
+  const handleGoogleLogin = async () => {
+    try {
+      setLoading(true);
+      await GoogleSignin.hasPlayServices();
+
+      const { data } = await GoogleSignin.signIn();
+
+      const idToken = data?.idToken;
+      console.log("idToken:", idToken);
+
+      if (!idToken) {
+        Alert.alert("Error", "No Google ID Token received");
+        return;
+      }
+
+      const googleCredential = GoogleAuthProvider.credential(idToken);
+
+      const userCredential =
+        await auth().signInWithCredential(googleCredential);
+
+      const firebaseToken = await userCredential.user.getIdToken(true);
+
+      console.log("Firebase Token:", firebaseToken);
+
+      const res = await googleLogin(firebaseToken);
+
+      if (!res.success) {
+        Alert.alert("Error", "Login failed on server");
+        return;
+      }
+
+      dispatch(
+        setUser({
+          name: res.data.user.name,
+          photo: res.data.user.photo,
+          bio: res.data.user.bio,
+          following: res.data.user.following || 0,
+          streak: res.data.user.streak || 0,
+          session: res.data.user.session || 0,
+          minutes: res.data.user.minutes || 0,
+        }),
+      );
+      await saveToken(res.data.token);
+
+      setSession(true);
+    } catch (error) {
+      console.error(
+        "Google Sign-In error:",
+        error?.code,
+        error?.message,
+        error,
+      );
+      Alert.alert(
+        "Google Sign-In Failed",
+        error?.message || "Something went wrong. Please try again.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSignIn = async () => {
     if (!email && !password) {
@@ -55,12 +127,23 @@ const SignInScreen = ({ navigation, setSession }) => {
       setLoading(true);
       const res = await login({ email, password });
 
-      if (res?.token) {
-        dispatch(setUser(res.user));
+      if (res.success && res.data?.token) {
+        dispatch(
+          setUser({
+            name: res.data.user.name,
+            photo: res.data.user.photo,
+            bio: res.data.user.bio,
+            following: res.data.user.following || 0,
+            streak: 0,
+            session: 0,
+            minutes: 0,
+          }),
+        );
         setSession(true);
+        await saveToken(res.data.token);
       }
     } catch (error) {
-      Alert.alert("Login Failed", res.message);
+      Alert.alert("Login Failed", error.message);
     } finally {
       setLoading(false);
     }
@@ -145,7 +228,7 @@ const SignInScreen = ({ navigation, setSession }) => {
           </View>
 
           {/* button */}
-          <Pressable
+          <TouchableOpacity
             style={[styles.signInBtn, loading && { opacity: 0.7 }]}
             onPress={handleSignIn}
           >
@@ -154,7 +237,7 @@ const SignInScreen = ({ navigation, setSession }) => {
             ) : (
               <Text style={styles.signInText}>Sign In</Text>
             )}
-          </Pressable>
+          </TouchableOpacity>
 
           {/* continue text */}
           <View style={styles.continueText}>
@@ -165,7 +248,7 @@ const SignInScreen = ({ navigation, setSession }) => {
 
           {/* google button */}
           <View style={styles.btns}>
-            <Pressable style={styles.googleBtn}>
+            <Pressable style={styles.googleBtn} onPress={handleGoogleLogin}>
               <Image
                 source={require("../../../assets/images/google-logo.png")}
                 style={styles.logoImage}

@@ -35,14 +35,12 @@ const TeacherProfileScreen = ({ navigation, route }) => {
 
   const isFollowing = followingTeachers.includes(teacher?._id);
 
-  const handleFollow = () => {
+  const handleFollow = async () => {
+    const res = await followUser(teacher._id);
 
-    const res= await followUser(teacher._id);
-
-    if(res.success){
+    if (res.success) {
       dispatch(toggleFollowTeacher(teacher._id));
     }
-    
   };
 
   const stats = [

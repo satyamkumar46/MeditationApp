@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -13,9 +13,11 @@ import {
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { useDispatch, useSelector } from "react-redux";
-import { loadUserStats } from "../../features/actions/userActions";
+import { useFocusEffect } from "@react-navigation/native";
+import { loadUserStats, loadUserStatsFromCache } from "../../features/actions/userActions";
 import { resetUser } from "../../features/slices/userSlice";
 import { moderateScale, scale, verticalScale } from "../../utility/helpers";
+import { clearUserCache } from "../../utility/cache";
 import { removeToken } from "../../utility/storage";
 
 const MENU_ITEMS = [
@@ -61,19 +63,33 @@ const ProfileScreen = ({ navigation, setSession }) => {
 
   const handleLogout = async () => {
     await removeToken();
+    await clearUserCache(); // wipe timer stats, user cache, daily goal for this account
     dispatch(resetUser());
     setSession(false);
   };
 
-  useEffect(() => {
-    const load = async () => {
-      setLoadingStats(true);
-      await dispatch(loadUserStats());
-      setLoadingStats(false);
-    };
+  // Two-phase load:
+  //   Phase 1 — instantly read from AsyncStorage cache → no spinner if cached
+  //   Phase 2 — silently refresh from API in background → updates cache for next time
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
 
-    load();
-  }, []);
+      const load = async () => {
+        // Phase 1: cache hit? → render immediately, hide spinner
+        const hasCached = await dispatch(loadUserStatsFromCache());
+        if (active && hasCached) setLoadingStats(false);
+
+        // Phase 2: always refresh from API silently (no spinner if cache existed)
+        if (!hasCached && active) setLoadingStats(true);
+        await dispatch(loadUserStats());
+        if (active) setLoadingStats(false);
+      };
+
+      load();
+      return () => { active = false; };
+    }, [dispatch]),
+  );
 
   return (
     <View style={styles.container}>

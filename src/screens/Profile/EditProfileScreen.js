@@ -14,8 +14,9 @@ import {
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useDispatch, useSelector } from "react-redux";
-import { setUser } from "../../features/slices/userSlice";
+import { updateProfile } from "../../features/slices/userSlice";
 import { updateProfileApi } from "../../services/userService";
+import { getUserFromCache, saveUserToCache } from "../../utility/cache";
 import { moderateScale, scale, verticalScale } from "../../utility/helpers";
 
 const EditProfileScreen = ({ navigation }) => {
@@ -80,7 +81,24 @@ const EditProfileScreen = ({ navigation }) => {
       const res = await updateProfileApi(formData);
 
       if (res.success) {
-        dispatch(setUser(res.user));
+        const updatedName  = res.data?.user?.name;
+        const updatedBio   = res.data?.user?.bio;
+        const updatedPhoto = res.data?.user?.photo;
+
+        // Only update name/bio/photo in Redux — never touch session/minutes/streak
+        dispatch(updateProfile({ name: updatedName, bio: updatedBio, photo: updatedPhoto }));
+
+        // Patch the local cache (spread existing so stats are preserved)
+        try {
+          const existing = await getUserFromCache() || {};
+          await saveUserToCache({
+            ...existing,
+            ...(updatedName  != null && { name:  updatedName }),
+            ...(updatedBio   != null && { bio:   updatedBio }),
+            ...(updatedPhoto != null && { photo: updatedPhoto }),
+          });
+        } catch (_) {}
+
         Alert.alert("Success", "Profile updated successfully");
         navigation.goBack();
       }

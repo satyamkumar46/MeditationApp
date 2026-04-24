@@ -1,3 +1,5 @@
+import auth, { GoogleAuthProvider } from "@react-native-firebase/auth";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
 import {
@@ -18,13 +20,14 @@ import Octicons from "react-native-vector-icons/Octicons";
 import { useDispatch } from "react-redux";
 import { setUser } from "../../features/slices/userSlice";
 import { signup } from "../../services/authService";
+import { saveUserToCache } from "../../utility/cache";
 import {
   getScreenWidth,
   moderateScale,
   scale,
   verticalScale,
 } from "../../utility/helpers";
-import { saveUserToCache } from "../../utility/cache";
+import { saveToken } from "../../utility/storage";
 
 const width = getScreenWidth();
 
@@ -56,11 +59,21 @@ const SignUpScreen = ({ navigation, setSession }) => {
         password,
       });
 
+      if (res.success && res.data?.token) {
+        await saveToken(res.data.token);
 
-      if (res?.token) {
-        // auto login after signup
-        dispatch(setUser(res.user));
-        await saveUserToCache(res.user);
+        dispatch(
+          setUser({
+            name: res.data.user.name,
+            photo: res.data.user.photo,
+            bio: res.data.user.bio,
+            following: res.data.user.following || 0,
+            streak: 0,
+            session: 0,
+            minutes: 0,
+          }),
+        );
+        await saveUserToCache(res.data.user);
         setSession(true);
         Alert.alert("Account created successfully");
       } else {
@@ -73,13 +86,72 @@ const SignUpScreen = ({ navigation, setSession }) => {
     }
   };
 
-  const handleGoogleSignUp = async () => {
-    const user = await googleLogin();
+  useEffect(() => {
+    GoogleSignin.configure({
+      webClientId:
+        "989828482149-cu7fcl1sjp44g3ak56pmj194fs9btn9q.apps.googleusercontent.com",
+      offlineAccess: true,
+    });
+  }, []);
 
-    const res = await fetch("auth/firebase");
+  const handleGoogleLogin = async () => {
+    try {
+      setLoading(true);
+      await GoogleSignin.hasPlayServices();
 
-    if (res.status === 400) {
-      Alert.alert("User already exists, please login");
+      const { data } = await GoogleSignin.signIn();
+
+      const idToken = data?.idToken;
+      console.log("idToken:", idToken);
+
+      if (!idToken) {
+        Alert.alert("Error", "No Google ID Token received");
+        return;
+      }
+
+      const googleCredential = GoogleAuthProvider.credential(idToken);
+
+      const userCredential =
+        await auth().signInWithCredential(googleCredential);
+
+      const firebaseToken = await userCredential.user.getIdToken(true);
+
+      console.log("Firebase Token:", firebaseToken);
+
+      const res = await googleLogin(firebaseToken);
+
+      if (!res.success) {
+        Alert.alert("Error", "Login failed on server");
+        return;
+      }
+
+      dispatch(
+        setUser({
+          name: res.data.user.name,
+          photo: res.data.user.photo,
+          bio: res.data.user.bio,
+          following: res.data.user.following || 0,
+          streak: res.data.user.streak || 0,
+          session: res.data.user.session || 0,
+          minutes: res.data.user.minutes || 0,
+        }),
+      );
+      await saveToken(res.data.token);
+
+      setSession(true);
+    } catch (error) {
+      console.error(
+        "Google Sign-In error:",
+        error?.code,
+        error?.message,
+        error,
+      );
+      Alert.alert(
+        "Google Sign-In Failed",
+        error?.message || "Something went wrong. Please try again.",
+      );
+    } finally {
+      setLoading(false);
     }
   };
 

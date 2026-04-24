@@ -16,26 +16,28 @@ const userSlice = createSlice({
   initialState,
   reducers: {
     setUser: (state, action) => {
-      state.name = action.payload.name;
-      state.profileImage = action.payload.photo;
-      state.streakCount = action.payload.streak;
-      state.totalSessions = action.payload.session;
-      state.totalMinutes = action.payload.minutes;
-      state.following = action.payload.following;
-      state.bio = action.payload.bio;
+      const data = action.payload || {};
+      if (data.name !== undefined) state.name = data.name;
+      if (data.photo !== undefined) state.profileImage = data.photo;
+      if (data.streak !== undefined) state.streakCount = data.streak;
+      if (data.session !== undefined) state.totalSessions = data.session;
+      if (data.minutes !== undefined) state.totalMinutes = data.minutes;
+      if (data.following !== undefined) state.following = data.following;
+      if (data.bio !== undefined) state.bio = data.bio;
     },
     updateProfile: (state, action) => {
-      const { name, bio, photo } = action.payload;
+      // Only update name / bio / photo — NEVER touch streak, session, minutes
+      const { name, bio, photo } = action.payload || {};
 
-      if (name !== undefined && name.trim() !== "") {
-        state.name = name;
+      if (name != null && String(name).trim() !== "") {
+        state.name = String(name).trim();
       }
 
-      if (bio !== undefined && bio.trim() !== "") {
-        state.bio = bio;
+      if (bio != null && String(bio).trim() !== "") {
+        state.bio = String(bio).trim();
       }
 
-      if (photo !== undefined) {
+      if (photo != null) {
         state.profileImage = photo;
       }
     },

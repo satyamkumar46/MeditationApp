@@ -1,4 +1,5 @@
 import apiClient from "../api/apiClient";
+import { clearUserCache } from "../utility/cache";
 import { removeToken, saveToken } from "../utility/storage";
 
 export const signup = async ({ name, email, password }) => {
@@ -10,6 +11,7 @@ export const signup = async ({ name, email, password }) => {
     });
 
     if (res.data.token) {
+      await clearUserCache(); // new account — wipe any previous user's local data
       await saveToken(res.data.token);
     }
 
@@ -27,6 +29,7 @@ export const login = async ({ email, password }) => {
     });
 
     if (res.data.token) {
+      await clearUserCache(); // switching accounts — wipe previous user's local data
       await saveToken(res.data.token);
     }
 
@@ -37,6 +40,7 @@ export const login = async ({ email, password }) => {
 };
 
 export const googleLogin = async (firebaseToken) => {
+  console.log("firebase TOKEN backend:", firebaseToken);
   try {
     const res = await apiClient.post(
       "/auth/firebase",

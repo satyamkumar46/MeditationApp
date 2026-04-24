@@ -5,7 +5,6 @@ import { Provider, useDispatch } from "react-redux";
 import { resetUser, setUser } from "./src/features/slices/userSlice";
 import { store } from "./src/features/store/Store";
 import StackNavigator from "./src/navigation/StackNavigator";
-import { getProfile } from "./src/services/authService";
 import { fetchUsersFromApi, fetchUserStats } from "./src/services/userService";
 import { getUserFromCache, saveUserToCache } from "./src/utility/cache";
 import { getToken } from "./src/utility/storage";
@@ -20,68 +19,58 @@ function AppContent() {
     const initApp = async () => {
       try {
         const token = await getToken();
+        console.log("TOKEN:", token);
 
         if (!token) {
           setSession(false);
+          setLoading(false);
           return;
         }
 
         const CachedUser = await getUserFromCache();
-        if (cachedUser) {
-          dispatch(setUser(cachedUser));
+        if (CachedUser) {
+          dispatch(setUser(CachedUser));
           setSession(true);
         }
 
         const [profileRes, statsRes] = await Promise.all([
-          getProfile(),
+          fetchUsersFromApi(),
           fetchUserStats(),
         ]);
 
-        if (profileRes?.success && statsRes?.success) {
-          const userData = {
-            name: profileRes.user.name,
-            photo: profileRes.user.photo,
-            bio: profileRes.user.bio,
-            following: profileRes.user.following,
+        console.log("PROFILE RES:", profileRes);
+        console.log("STATS RES:", statsRes);
 
-            streak: statsRes.user.streak,
-            session: statsRes.user.session,
-            minutes: statsRes.user.minutes,
+        if (profileRes?.success && profileRes?.data?.user) {
+          const profileUser = profileRes.data.user;
+          const statsUser = statsRes?.data?.user || {};
+
+          const userData = {
+            name: profileUser.name,
+            photo: profileUser.photo,
+            bio: profileUser.bio,
+            following: profileUser.following,
+            streak: statsUser.streak ?? profileUser.streak ?? 0,
+            session: statsUser.session ?? profileUser.session ?? 0,
+            minutes: statsUser.minutes ?? profileUser.minutes ?? 0,
           };
 
           dispatch(setUser(userData));
+          console.log("FINAL USER DATA:", userData);
           await saveUserToCache(userData);
           setSession(true);
         } else {
-          dispatch(resetUser());
-          setSession(false);
+          console.log("API failed, but keeping user logged in");
+          // Keep session alive if cached user was already loaded
         }
       } catch (error) {
         dispatch(resetUser());
-        setSession(false);
       } finally {
         setLoading(false);
       }
     };
 
     initApp();
-  }, []);
-
-  useEffect(() => {
-    const loadUser = async () => {
-      const cachedUser = await getUserFromCache();
-
-      dispatch(setUser(cachedUser));
-
-      const res = await fetchUsersFromApi();
-
-      if (res.success) {
-        dispatch(setUser(res.user));
-        await saveUserToCache(res.user);
-      }
-    };
-
-    loadUser();
   }, []);
 
   useEffect(() => {
@@ -99,7 +88,7 @@ function AppContent() {
     checkFirstLaunch();
   }, []);
 
-  if (session === null) return null;
+  if (loading) return null;
 
   return (
     <NavigationContainer>

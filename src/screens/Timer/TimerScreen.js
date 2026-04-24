@@ -1,12 +1,15 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Audio } from "expo-av";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
+  Modal,
   Platform,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -14,12 +17,11 @@ import Svg, { Circle } from "react-native-svg";
 import Feather from "react-native-vector-icons/Feather";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setUser } from "../../features/slices/userSlice";
 import { addSession } from "../../services/userService";
+import { getUserFromCache, saveUserToCache } from "../../utility/cache";
 import { moderateScale, scale, verticalScale } from "../../utility/helpers";
-
-/* ---------------- CONSTANTS ---------------- */
 
 const DURATIONS = [
   { label: "1 min", value: 1 },
@@ -63,68 +65,304 @@ const TIPS = [
   "Notice the space between thoughts.",
 ];
 
-/* ---------------- GLOBAL STATE ---------------- */
-
-let globalTimerState = {
-  isRunning: false,
-  isPaused: false,
-  startedAt: null,
-  pausedRemaining: null,
-  totalDuration: 0,
-  selectedDuration: 5,
-  selectedSound: 1,
-  isMuted: false,
-};
-
-/* ---------------- COMPONENT ---------------- */
+const DAILY_GOAL_KEY = "DAILY_GOAL_MINUTES";
+const TODAY_MINUTES_KEY = "TODAY_MINUTES";
+const TODAY_DATE_KEY = "TODAY_DATE";
 
 const TimerScreen = ({ navigation }) => {
+  const dispatch = useDispatch();
+  const reduxUser = useSelector((s) => s.user);
+
   const soundRef = useRef(null);
   const tickRef = useRef(null);
   const completedRef = useRef(false);
+  const startedAtRef = useRef(null);
+  const totalDurationRef = useRef(0);
+  const selectedDurationRef = useRef(5);
+  const pausedRemainingRef = useRef(null);
+  const onTimerCompleteRef = useRef(null); // always points to latest callback, no stale closure
 
-  const [selectedDuration, setSelectedDuration] = useState(
-    globalTimerState.selectedDuration,
-  );
-  const [selectedSound, setSelectedSound] = useState(
-    globalTimerState.selectedSound,
-  );
+  const [selectedDuration, setSelectedDuration] = useState(5);
+  const [selectedSound, setSelectedSound] = useState(1);
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(5 * 60);
+  const [pausedRemaining, setPausedRemaining] = useState(null);
 
-  const [streak, setStreak] = useState(0);
-  const [totalSessions, setTotalSessions] = useState(0);
-  const [totalMinutes, setTotalMinutes] = useState(0);
+  const [streak, setStreak] = useState(reduxUser?.streakCount ?? 0);
   const [todayMinutes, setTodayMinutes] = useState(0);
-
-  const [timeRemaining, setTimeRemaining] = useState(selectedDuration * 60);
+  const [dailyGoal, setDailyGoal] = useState(20);
+  const [goalModalVisible, setGoalModalVisible] = useState(false);
+  const [goalInput, setGoalInput] = useState("20");
+  const goalAlreadyHitRef = useRef(false);
 
   const tip = useState(() => TIPS[Math.floor(Math.random() * TIPS.length)])[0];
-
-  /* ---------------- UI CONSTANTS (FIXED) ---------------- */
 
   const circleSize = moderateScale(220);
   const strokeWidth = moderateScale(6);
   const radius = (circleSize - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-
   const totalSeconds = selectedDuration * 60;
-
   const progressPercent =
     totalSeconds > 0 ? (timeRemaining / totalSeconds) * 100 : 100;
-
   const strokeDashoffset =
     circumference - (progressPercent / 100) * circumference;
-
-  const dailyGoal = 20;
   const goalPercent = Math.min((todayMinutes / dailyGoal) * 100, 100);
   const goalRemaining = Math.max(dailyGoal - todayMinutes, 0);
+
+  /* ---- load persisted goal & today's minutes ---- */
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const today = new Date().toDateString();
+        const savedDate = await AsyncStorage.getItem(TODAY_DATE_KEY);
+        const savedGoal = await AsyncStorage.getItem(DAILY_GOAL_KEY);
+
+        if (savedGoal) {
+          const g = parseInt(savedGoal, 10);
+          setDailyGoal(g);
+          setGoalInput(String(g));
+        }
+
+        if (savedDate === today) {
+          const savedMins = await AsyncStorage.getItem(TODAY_MINUTES_KEY);
+          if (savedMins) setTodayMinutes(parseInt(savedMins, 10));
+        } else {
+          await AsyncStorage.setItem(TODAY_DATE_KEY, today);
+          await AsyncStorage.setItem(TODAY_MINUTES_KEY, "0");
+          goalAlreadyHitRef.current = false;
+        }
+      } catch (e) {
+        console.log("Load error", e);
+      }
+    };
+    load();
+  }, []);
+
+  /* ---- sync streak from redux ---- */
+  useEffect(() => {
+    if (reduxUser?.streakCount !== undefined) {
+      setStreak(reduxUser.streakCount);
+    }
+  }, [reduxUser?.streakCount]);
 
   const getStatusLabel = () => {
     if (isRunning) return "FOCUS";
     if (isPaused) return "PAUSED";
     return "READY";
+  };
+
+  const formatTime = (s) =>
+    `${Math.floor(s / 60)
+      .toString()
+      .padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`;
+
+  /* ---- sound helpers ---- */
+  const playSound = async (id) => {
+    const sound = AMBIENT_SOUNDS.find((s) => s.id === id);
+    if (!sound) return;
+    try {
+      await Audio.setAudioModeAsync({
+        staysActiveInBackground: true,
+        playsInSilentModeIOS: true,
+      });
+      const { sound: newSound } = await Audio.Sound.createAsync(
+        { uri: sound.url },
+        { shouldPlay: true, isLooping: true, volume: isMuted ? 0 : 1 },
+      );
+      soundRef.current = newSound;
+    } catch (e) {
+      console.log("Sound error", e);
+    }
+  };
+
+  const cleanupSound = async () => {
+    if (soundRef.current) {
+      try {
+        await soundRef.current.unloadAsync();
+      } catch {}
+      soundRef.current = null;
+    }
+  };
+
+  const toggleMute = async () => {
+    const m = !isMuted;
+    setIsMuted(m);
+    if (soundRef.current) {
+      try {
+        await soundRef.current.setVolumeAsync(m ? 0 : 1);
+      } catch {}
+    }
+  };
+
+  /* ---- session complete ---- */
+  const onTimerComplete = useCallback(
+    async (minutes) => {
+      clearInterval(tickRef.current);
+      setIsRunning(false);
+      setIsPaused(false);
+      setTimeRemaining(0);
+      completedRef.current = true;
+      await cleanupSound();
+
+      try {
+        const res = await addSession(minutes);
+
+        // apiClient wraps response as { data: <json body>, status, success }
+        // The JSON body may be { user: { streak, session, minutes } } or { streak, session, minutes }
+        const body = res?.data ?? res ?? {};
+        const userObj = body?.user ?? body;
+
+        const newStreak  = userObj?.streak  ?? streak + 1; // fallback: increment locally
+        const newSession = userObj?.session ?? (reduxUser.totalSessions + 1);
+        const newMinutes = userObj?.minutes ?? (reduxUser.totalMinutes + minutes);
+
+        if (res?.success) {
+          setStreak(newStreak);
+          dispatch(
+            setUser({
+              streak:  newStreak,
+              session: newSession,
+              minutes: newMinutes,
+            }),
+          );
+
+          // Update local cache immediately so ProfileScreen reads fresh data
+          // without waiting for an API call (cache-first load)
+          try {
+            const existing = await getUserFromCache() || {};
+            await saveUserToCache({
+              ...existing,
+              streak:  newStreak,
+              session: newSession,
+              minutes: newMinutes,
+            });
+          } catch (_) {}
+        }
+
+        const newToday = todayMinutes + minutes;
+        setTodayMinutes(newToday);
+        await AsyncStorage.setItem(TODAY_MINUTES_KEY, String(newToday));
+
+        const displayStreak = res?.success ? newStreak : streak;
+        if (newToday >= dailyGoal && !goalAlreadyHitRef.current) {
+          goalAlreadyHitRef.current = true;
+          Alert.alert(
+            "🎉 Daily Goal Reached!",
+            `You've hit your ${dailyGoal} min goal!\n🔥 Streak: ${displayStreak} day${displayStreak !== 1 ? "s" : ""}`,
+          );
+        } else {
+          Alert.alert(
+            "Session Complete ✅",
+            `🔥 Streak: ${displayStreak} day${displayStreak !== 1 ? "s" : ""}`,
+          );
+        }
+      } catch (e) {
+        Alert.alert("Session saved locally");
+      }
+    },
+    [streak, todayMinutes, dailyGoal, dispatch, reduxUser],
+  );
+
+  // keep ref in sync with latest callback so interval never uses stale version
+  useEffect(() => {
+    onTimerCompleteRef.current = onTimerComplete;
+  }, [onTimerComplete]);
+
+  /* ---- tick ---- */
+  const startTick = (durationSeconds) => {
+    clearInterval(tickRef.current);
+    // set start time IMMEDIATELY so elapsed is always correct
+    startedAtRef.current = Date.now();
+    totalDurationRef.current = durationSeconds;
+
+    tickRef.current = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startedAtRef.current) / 1000);
+      const remaining = Math.max(totalDurationRef.current - elapsed, 0);
+      setTimeRemaining(remaining);
+
+      if (remaining <= 0 && !completedRef.current) {
+        completedRef.current = true;
+        clearInterval(tickRef.current);
+        // use ref so we always call the LATEST onTimerComplete, never a stale closure
+        onTimerCompleteRef.current?.(selectedDurationRef.current);
+      }
+    }, 1000);
+  };
+
+  /* ---- timer controls ---- */
+  const startTimer = async () => {
+    completedRef.current = false;
+    pausedRemainingRef.current = null;
+    selectedDurationRef.current = selectedDuration;
+    const total = selectedDuration * 60;
+
+    setIsRunning(true);
+    setIsPaused(false);
+    setTimeRemaining(total); // show correct time immediately
+    setPausedRemaining(null);
+
+    // start tick BEFORE awaiting sound so display counts from the start
+    startTick(total);
+
+    // load sound in background — won't block the countdown
+    await playSound(selectedSound);
+  };
+
+  const pauseTimer = async () => {
+    const elapsed = Math.floor((Date.now() - startedAtRef.current) / 1000);
+    const remaining = Math.max(totalDurationRef.current - elapsed, 0);
+
+    clearInterval(tickRef.current);
+
+    // store in BOTH ref (for immediate read) and state (for UI display)
+    pausedRemainingRef.current = remaining;
+    setPausedRemaining(remaining);
+    setIsRunning(false);
+    setIsPaused(true);
+    setTimeRemaining(remaining);
+
+    if (soundRef.current) {
+      try {
+        await soundRef.current.pauseAsync();
+      } catch {}
+    }
+  };
+
+  const resumeTimer = async () => {
+    // read from REF — never stale, even across async awaits
+    const remaining = pausedRemainingRef.current ?? timeRemaining;
+    pausedRemainingRef.current = null;
+
+    setIsRunning(true);
+    setIsPaused(false);
+    setTimeRemaining(remaining); // immediately show correct time
+
+    // START THE TICK FIRST so countdown updates instantly on resume
+    startTick(remaining);
+
+    // then handle sound asynchronously (won't block the display)
+    if (soundRef.current) {
+      try {
+        await soundRef.current.playAsync();
+      } catch {
+        await cleanupSound();
+        await playSound(selectedSound);
+      }
+    } else {
+      await playSound(selectedSound);
+    }
+  };
+
+  const resetTimer = async () => {
+    clearInterval(tickRef.current);
+    completedRef.current = false;
+    setIsRunning(false);
+    setIsPaused(false);
+    setTimeRemaining(selectedDuration * 60);
+    setPausedRemaining(null);
+    await cleanupSound();
   };
 
   const handlePlayPress = () => {
@@ -133,166 +371,18 @@ const TimerScreen = ({ navigation }) => {
     else startTimer();
   };
 
-  /* ---------------- TIMER ---------------- */
-
-  const startTimer = async () => {
-    completedRef.current = false;
-
-    const total = selectedDuration * 60;
-
-    globalTimerState = {
-      ...globalTimerState,
-      isRunning: true,
-      isPaused: false,
-      startedAt: Date.now(),
-      totalDuration: total,
-      selectedDuration,
-      selectedSound,
-      pausedRemaining: null,
-    };
-
-    setIsRunning(true);
-    setIsPaused(false);
-    setTimeRemaining(total);
-
-    await playSound(selectedSound);
-
-    tickRef.current = setInterval(() => {
-      const elapsed = Math.floor(
-        (Date.now() - globalTimerState.startedAt) / 1000,
-      );
-      const remaining = Math.max(globalTimerState.totalDuration - elapsed, 0);
-
-      setTimeRemaining(remaining);
-
-      if (remaining <= 0 && !completedRef.current) {
-        completedRef.current = true;
-        onTimerComplete();
-      }
-    }, 1000);
-  };
-
-  const pauseTimer = async () => {
-    const elapsed = Math.floor(
-      (Date.now() - globalTimerState.startedAt) / 1000,
-    );
-    const remaining = Math.max(globalTimerState.totalDuration - elapsed, 0);
-
-    globalTimerState.isRunning = false;
-    globalTimerState.isPaused = true;
-    globalTimerState.pausedRemaining = remaining;
-
-    setIsRunning(false);
-    setIsPaused(true);
-    setTimeRemaining(remaining);
-
-    clearInterval(tickRef.current);
-
-    if (soundRef.current) {
-      await soundRef.current.pauseAsync();
+  /* ---- daily goal modal ---- */
+  const saveGoal = async () => {
+    const val = parseInt(goalInput, 10);
+    if (!val || val < 1 || val > 600) {
+      Alert.alert("Invalid", "Enter a goal between 1 and 600 minutes.");
+      return;
     }
+    setDailyGoal(val);
+    goalAlreadyHitRef.current = todayMinutes >= val;
+    await AsyncStorage.setItem(DAILY_GOAL_KEY, String(val));
+    setGoalModalVisible(false);
   };
-
-  const resumeTimer = async () => {
-    const remaining = globalTimerState.pausedRemaining || timeRemaining;
-
-    globalTimerState.isRunning = true;
-    globalTimerState.isPaused = false;
-    globalTimerState.startedAt = Date.now();
-    globalTimerState.totalDuration = remaining;
-
-    setIsRunning(true);
-    setIsPaused(false);
-
-    await playSound(globalTimerState.selectedSound);
-
-    startTimer();
-  };
-
-  const resetTimer = async () => {
-    globalTimerState.isRunning = false;
-    globalTimerState.isPaused = false;
-
-    setIsRunning(false);
-    setIsPaused(false);
-    setTimeRemaining(selectedDuration * 60);
-
-    clearInterval(tickRef.current);
-
-    if (soundRef.current) {
-      await soundRef.current.unloadAsync();
-      soundRef.current = null;
-    }
-  };
-
-  /* ---------------- SOUND ---------------- */
-
-  const playSound = async (id) => {
-    const sound = AMBIENT_SOUNDS.find((s) => s.id === id);
-    if (!sound) return;
-
-    await Audio.setAudioModeAsync({
-      staysActiveInBackground: true,
-      playsInSilentModeIOS: true,
-    });
-
-    const { sound: newSound } = await Audio.Sound.createAsync(
-      { uri: sound.url },
-      { shouldPlay: true, isLooping: true, volume: isMuted ? 0 : 1 },
-    );
-
-    soundRef.current = newSound;
-  };
-
-  const toggleMute = async () => {
-    const m = !isMuted;
-    setIsMuted(m);
-
-    if (soundRef.current) {
-      await soundRef.current.setVolumeAsync(m ? 0 : 1);
-    }
-  };
-
-  /* ---------------- COMPLETE ---------------- */
-
-  const onTimerComplete = useCallback(async () => {
-    const minutes = globalTimerState.selectedDuration;
-
-    const dispatch = useDispatch();
-
-    setIsRunning(false);
-    setIsPaused(false);
-    setTimeRemaining(0);
-
-    clearInterval(tickRef.current);
-
-    if (soundRef.current) {
-      await soundRef.current.unloadAsync();
-      soundRef.current = null;
-    }
-
-    try {
-      const res = await addSession(minutes);
-
-      if (res?.success) {
-        setStreak(res.user.streak || 0);
-        setTodayMinutes((p) => p + minutes);
-
-        Alert.alert("Done", `🔥 Streak: ${res.user.streak}`);
-      }
-
-      if (res?.success && res.user) {
-        dispatch(setUser(res.user));
-      }
-    } catch {
-      Alert.alert("Saved locally");
-    }
-  }, []);
-
-  const formatTime = (s) =>
-    `${Math.floor(s / 60)
-      .toString()
-      .padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`;
 
   return (
     <View style={styles.container}>
@@ -309,7 +399,7 @@ const TimerScreen = ({ navigation }) => {
         <Text style={styles.headerTitle}>
           {isRunning ? "In Session" : "Meditation"}
         </Text>
-        <View style={styles.settingsBtn}></View>
+        <View style={styles.settingsBtn} />
       </View>
 
       <ScrollView
@@ -380,9 +470,21 @@ const TimerScreen = ({ navigation }) => {
         <View style={styles.goalSection}>
           <View style={styles.goalHeader}>
             <Text style={styles.goalLabel}>DAILY GOAL</Text>
-            <Text style={styles.goalValue}>
-              {todayMinutes} / {dailyGoal} min
-            </Text>
+            <View style={styles.goalRight}>
+              <Text style={styles.goalValue}>
+                {todayMinutes} / {dailyGoal} min
+              </Text>
+              <TouchableOpacity
+                style={styles.editGoalBtn}
+                onPress={() => setGoalModalVisible(true)}
+              >
+                <Feather
+                  name="edit-2"
+                  size={moderateScale(13)}
+                  color="#20DF60"
+                />
+              </TouchableOpacity>
+            </View>
           </View>
           <View style={styles.progressBarBg}>
             <View
@@ -411,6 +513,8 @@ const TimerScreen = ({ navigation }) => {
                 onPress={() => {
                   if (!isRunning && !isPaused) {
                     setSelectedDuration(d.value);
+                    selectedDurationRef.current = d.value;
+                    setTimeRemaining(d.value * 60);
                   }
                 }}
                 disabled={isRunning || isPaused}
@@ -442,8 +546,6 @@ const TimerScreen = ({ navigation }) => {
                 ]}
                 onPress={async () => {
                   setSelectedSound(s.id);
-                  globalTimerState.selectedSound = s.id;
-                  // If timer is running, switch the sound live
                   if (isRunning) {
                     await cleanupSound();
                     const { sound: newSound } = await Audio.Sound.createAsync(
@@ -485,7 +587,6 @@ const TimerScreen = ({ navigation }) => {
               color="#94A3B8"
             />
           </TouchableOpacity>
-
           <TouchableOpacity
             style={[styles.playBtn, isPaused && { backgroundColor: "#FBBF24" }]}
             onPress={handlePlayPress}
@@ -497,7 +598,6 @@ const TimerScreen = ({ navigation }) => {
               style={!isRunning ? { marginLeft: scale(3) } : {}}
             />
           </TouchableOpacity>
-
           <TouchableOpacity style={styles.controlBtn} onPress={toggleMute}>
             <Ionicons
               name={isMuted ? "volume-mute-outline" : "volume-high-outline"}
@@ -517,6 +617,47 @@ const TimerScreen = ({ navigation }) => {
           <Text style={styles.tipText}>{tip}</Text>
         </View>
       </ScrollView>
+
+      {/* Daily Goal Modal */}
+      <Modal
+        visible={goalModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setGoalModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Set Daily Goal</Text>
+            <Text style={styles.modalSubtitle}>
+              How many minutes do you want to meditate today?
+            </Text>
+            <View style={styles.inputRow}>
+              <TextInput
+                style={styles.goalInputField}
+                keyboardType="numeric"
+                value={goalInput}
+                onChangeText={setGoalInput}
+                maxLength={3}
+                placeholderTextColor="#64748B"
+                placeholder="20"
+                selectionColor="#20DF60"
+              />
+              <Text style={styles.inputUnit}>min</Text>
+            </View>
+            <View style={styles.modalBtns}>
+              <TouchableOpacity
+                style={styles.modalCancel}
+                onPress={() => setGoalModalVisible(false)}
+              >
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalSave} onPress={saveGoal}>
+                <Text style={styles.modalSaveText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -524,10 +665,7 @@ const TimerScreen = ({ navigation }) => {
 export default TimerScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#112116",
-  },
+  container: { flex: 1, backgroundColor: "#112116" },
   header: {
     paddingTop: Platform.OS === "ios" ? verticalScale(60) : verticalScale(45),
     paddingHorizontal: scale(16),
@@ -547,15 +685,8 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#F1F5F9",
   },
-  settingsBtn: {
-    width: moderateScale(36),
-    height: moderateScale(36),
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  scrollContent: {
-    paddingBottom: verticalScale(40),
-  },
+  settingsBtn: { width: moderateScale(36), height: moderateScale(36) },
+  scrollContent: { paddingBottom: verticalScale(40) },
   streakContainer: {
     alignItems: "center",
     marginTop: verticalScale(12),
@@ -578,11 +709,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     letterSpacing: 1,
   },
-  liveIndicator: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: scale(6),
-  },
+  liveIndicator: { flexDirection: "row", alignItems: "center", gap: scale(6) },
   liveDot: {
     width: moderateScale(8),
     height: moderateScale(8),
@@ -595,23 +722,15 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     letterSpacing: 1.5,
   },
-  timerContainer: {
-    alignItems: "center",
-    marginTop: verticalScale(24),
-  },
+  timerContainer: { alignItems: "center", marginTop: verticalScale(24) },
   circleContainer: {
     width: moderateScale(220),
     height: moderateScale(220),
     justifyContent: "center",
     alignItems: "center",
   },
-  svgCircle: {
-    position: "absolute",
-  },
-  timerTextContainer: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  svgCircle: { position: "absolute" },
+  timerTextContainer: { justifyContent: "center", alignItems: "center" },
   timerText: {
     fontSize: moderateScale(52),
     fontWeight: "bold",
@@ -625,10 +744,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     marginTop: verticalScale(4),
   },
-  goalSection: {
-    marginTop: verticalScale(28),
-    paddingHorizontal: scale(24),
-  },
+  goalSection: { marginTop: verticalScale(28), paddingHorizontal: scale(24) },
   goalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -641,10 +757,18 @@ const styles = StyleSheet.create({
     color: "#F1F5F9",
     letterSpacing: 1,
   },
+  goalRight: { flexDirection: "row", alignItems: "center", gap: scale(8) },
   goalValue: {
     fontSize: moderateScale(14),
     color: "#20DF60",
     fontWeight: "600",
+  },
+  editGoalBtn: {
+    backgroundColor: "#20DF601A",
+    borderWidth: 1,
+    borderColor: "#20DF6033",
+    borderRadius: moderateScale(12),
+    padding: moderateScale(5),
   },
   progressBarBg: {
     height: moderateScale(8),
@@ -662,10 +786,7 @@ const styles = StyleSheet.create({
     color: "#94A3B8",
     marginTop: verticalScale(6),
   },
-  durationSection: {
-    marginTop: verticalScale(28),
-    alignItems: "center",
-  },
+  durationSection: { marginTop: verticalScale(28), alignItems: "center" },
   durationTitle: {
     fontSize: moderateScale(16),
     fontWeight: "bold",
@@ -684,17 +805,13 @@ const styles = StyleSheet.create({
     paddingVertical: verticalScale(10),
     borderRadius: moderateScale(20),
   },
-  durationBtnActive: {
-    backgroundColor: "#20DF60",
-  },
+  durationBtnActive: { backgroundColor: "#20DF60" },
   durationBtnText: {
     fontSize: moderateScale(14),
     color: "#94A3B8",
     fontWeight: "600",
   },
-  durationBtnTextActive: {
-    color: "#112116",
-  },
+  durationBtnTextActive: { color: "#112116" },
   ambientSection: {
     marginTop: verticalScale(28),
     paddingHorizontal: scale(24),
@@ -720,19 +837,13 @@ const styles = StyleSheet.create({
     borderColor: "#20DF601A",
     gap: verticalScale(6),
   },
-  ambientBtnActive: {
-    backgroundColor: "#20DF60",
-    borderColor: "#20DF60",
-  },
+  ambientBtnActive: { backgroundColor: "#20DF60", borderColor: "#20DF60" },
   ambientLabel: {
     fontSize: moderateScale(12),
     color: "#94A3B8",
     fontWeight: "500",
   },
-  ambientLabelActive: {
-    color: "#112116",
-    fontWeight: "bold",
-  },
+  ambientLabelActive: { color: "#112116", fontWeight: "bold" },
   controlsRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -776,5 +887,82 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(14),
     color: "#CBD5E1",
     lineHeight: moderateScale(20),
+  },
+  // Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "#00000088",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalCard: {
+    backgroundColor: "#1A2E1F",
+    borderRadius: moderateScale(20),
+    padding: moderateScale(24),
+    width: "80%",
+    borderWidth: 1,
+    borderColor: "#20DF6033",
+  },
+  modalTitle: {
+    fontSize: moderateScale(18),
+    fontWeight: "bold",
+    color: "#F1F5F9",
+    marginBottom: verticalScale(6),
+  },
+  modalSubtitle: {
+    fontSize: moderateScale(13),
+    color: "#94A3B8",
+    marginBottom: verticalScale(20),
+  },
+  inputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: scale(10),
+    marginBottom: verticalScale(24),
+  },
+  goalInputField: {
+    flex: 1,
+    backgroundColor: "#20DF600D",
+    borderWidth: 1,
+    borderColor: "#20DF6033",
+    borderRadius: moderateScale(12),
+    paddingHorizontal: scale(16),
+    paddingVertical: verticalScale(12),
+    fontSize: moderateScale(24),
+    fontWeight: "bold",
+    color: "#F1F5F9",
+    textAlign: "center",
+  },
+  inputUnit: {
+    fontSize: moderateScale(16),
+    color: "#94A3B8",
+    fontWeight: "600",
+  },
+  modalBtns: { flexDirection: "row", gap: scale(12) },
+  modalCancel: {
+    flex: 1,
+    paddingVertical: verticalScale(12),
+    borderRadius: moderateScale(12),
+    backgroundColor: "#20DF600D",
+    borderWidth: 1,
+    borderColor: "#20DF601A",
+    alignItems: "center",
+  },
+  modalCancelText: {
+    color: "#94A3B8",
+    fontWeight: "600",
+    fontSize: moderateScale(14),
+  },
+  modalSave: {
+    flex: 1,
+    paddingVertical: verticalScale(12),
+    borderRadius: moderateScale(12),
+    backgroundColor: "#20DF60",
+    alignItems: "center",
+  },
+  modalSaveText: {
+    color: "#112116",
+    fontWeight: "bold",
+    fontSize: moderateScale(14),
   },
 });

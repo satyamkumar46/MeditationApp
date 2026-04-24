@@ -13,61 +13,76 @@ class ApiClient {
 
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
-
     const token = await getToken();
 
-    const config = {
+    const baseConfig = {
       ...options,
       headers: {
         ...this.defaultHeaders,
         ...(token && { Authorization: `Bearer ${token}` }),
         ...options.headers,
       },
-      signal: controller.signal,
     };
-    if (config.body instanceof FormData) {
-      delete config.headers["Content-Type"];
+
+    if (baseConfig.body instanceof FormData) {
+      delete baseConfig.headers["Content-Type"];
     }
 
-    try {
-      const executeRequest = async () => {
-        const response = await fetch(url, config);
+    const executeRequest = async () => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+      try {
+        const response = await fetch(url, {
+          ...baseConfig,
+          signal: controller.signal,
+        });
+
+        const data = await response.json().catch(() => ({}));
 
         if (!response.ok) {
-          throw await this._handleHttpError(response);
+          throw {
+            message: data.message || "Request failed",
+            status: response.status,
+            code: `HTTP_${response.status}`,
+            details: data,
+          };
         }
 
-        const result = await this._retryRequest(
-          executeRequest,
-          API_CONFIG.RETRY_COUNT,
-          API_CONFIG.RETRY_DELAY,
-        );
-
+        return {
+          data,
+          status: response.status,
+          success: true,
+        };
+      } finally {
         clearTimeout(timeoutId);
+      }
+    };
 
-        return result;
-      };
+    try {
+      return await this._retryRequest(
+        executeRequest,
+        API_CONFIG.RETRY_COUNT,
+        API_CONFIG.RETRY_DELAY,
+      );
     } catch (error) {
-      clearTimeout(timeoutId);
+      // ❌ Don't retry client errors (400–499)
+      if (error.status && error.status < 500) {
+        throw error;
+      }
 
+      // ⏱ timeout
       if (error.name === "AbortError") {
         throw {
-          message: "Request timed out. Please try again.",
+          message: "Request timed out. Try again.",
           code: "TIMEOUT",
           status: 408,
         };
       }
 
-      if (error.status && error.status < 500) {
-        throw error; // Already formatted error
-      }
-
+      // 🌐 network error
       throw {
-        message:
-          error.message || "Network error. Please check your connection.",
+        message: error.message || "Network error",
         code: "NETWORK_ERROR",
         status: 0,
       };
@@ -111,7 +126,7 @@ class ApiClient {
     return this.request(endpoint, {
       ...options,
       method: "PUT",
-      body: JSON.stringify(body),
+      body: body instanceof FormData ? body : JSON.stringify(body),
     });
   }
 
@@ -131,6 +146,11 @@ class ApiClient {
     try {
       return await fn();
     } catch (error) {
+      // ❌ Don't retry client errors
+      if (error.status && error.status < 500) {
+        throw error;
+      }
+
       if (retries <= 0) throw error;
 
       await new Promise((res) => setTimeout(res, delay));

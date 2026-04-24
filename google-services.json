@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "989828482149",
+    "project_id": "meditation-app-470a7",
+    "storage_bucket": "meditation-app-470a7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:989828482149:android:d4174e29a43efd33edb28c",
+        "android_client_info": {
+          "package_name": "com.sksatyam.MeditationApp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "989828482149-intuiuv273upidmq75nn92kbkda2fids.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.sksatyam.MeditationApp",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "989828482149-cu7fcl1sjp44g3ak56pmj194fs9btn9q.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAg3t7r8YpyH0HcTdXhfMA59cdZkOMLhMw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "989828482149-cu7fcl1sjp44g3ak56pmj194fs9btn9q.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
