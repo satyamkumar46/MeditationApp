@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
   Image,
   Platform,
   RefreshControl,
@@ -46,7 +47,7 @@ const getCategoryIcon = (catname) => {
   return CATEGORY_ICONS[catname] || "ellipse-outline";
 };
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = ({ navigation, scrollY }) => {
   const [greet, setGreet] = useState(getGreeting());
 
   const name = useSelector((state) => state.user.name);
@@ -129,7 +130,7 @@ const HomeScreen = ({ navigation }) => {
         </View>
       </View>
 
-      <ScrollView
+      <Animated.ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
@@ -141,6 +142,11 @@ const HomeScreen = ({ navigation }) => {
             progressBackgroundColor="#1a3a25"
           />
         }
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true },
+        )}
+        scrollEventThrottle={16}
       >
         {/* feature section */}
         <View style={styles.featuredSection}>
@@ -333,7 +339,7 @@ const HomeScreen = ({ navigation }) => {
               </View>
             ))}
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
     </View>
   );
 };
@@ -361,7 +367,7 @@ const styles = StyleSheet.create({
   avatarStyle: {
     height: moderateScale(50),
     width: moderateScale(50),
-    borderRadius: moderateScale(21),
+    borderRadius: moderateScale(25),
   },
   greet: {
     color: "#20DF60B3",

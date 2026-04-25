@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
   Image,
   Pressable,
   RefreshControl,
@@ -17,7 +18,7 @@ import useSounds from "../../hooks/useSounds";
 import useTeachers from "../../hooks/useTeachers";
 import { moderateScale, scale, verticalScale } from "../../utility/helpers";
 
-const ExploreScreen = ({ navigation }) => {
+const ExploreScreen = ({ navigation, scrollY }) => {
   const {
     teachers,
     loading: teachersLoading,
@@ -126,7 +127,7 @@ const ExploreScreen = ({ navigation }) => {
       </View>
 
       {/* content section */}
-      <ScrollView
+      <Animated.ScrollView
         showsVerticalScrollIndicator={false}
         style={styles.contentSection}
         keyboardShouldPersistTaps="handled"
@@ -139,6 +140,10 @@ const ExploreScreen = ({ navigation }) => {
             progressBackgroundColor="#1a3a25"
           />
         }
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true },
+        )}
       >
         {/* ========== SEARCH RESULTS ========== */}
         {isSearching ? (
@@ -457,7 +462,7 @@ const ExploreScreen = ({ navigation }) => {
             </View>
           </>
         )}
-      </ScrollView>
+      </Animated.ScrollView>
     </View>
   );
 };

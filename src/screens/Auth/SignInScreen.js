@@ -1,5 +1,5 @@
 import auth, { GoogleAuthProvider } from "@react-native-firebase/auth";
-import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { GoogleSignin, statusCodes } from "@react-native-google-signin/google-signin";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import {
@@ -52,13 +52,15 @@ const SignInScreen = ({ navigation, setSession }) => {
       setLoading(true);
       await GoogleSignin.hasPlayServices();
 
+      await GoogleSignin.signOut();
+
       const { data } = await GoogleSignin.signIn();
 
       const idToken = data?.idToken;
       console.log("idToken:", idToken);
 
       if (!idToken) {
-        Alert.alert("Error", "No Google ID Token received");
+        Alert.alert("No account selected");
         return;
       }
 
@@ -99,6 +101,18 @@ const SignInScreen = ({ navigation, setSession }) => {
         error?.message,
         error,
       );
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        Alert.alert("No account selected");
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        Alert.alert("Sign-in already in progress");
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        Alert.alert("Play services not available");
+      } else {
+        Alert.alert(
+          "Google Sign-In Failed",
+          error?.message || "Something went wrong. Please try again.",
+        );
+      }
       Alert.alert(
         "Google Sign-In Failed",
         error?.message || "Something went wrong. Please try again.",

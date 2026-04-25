@@ -1,4 +1,6 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { useRef } from "react";
+import { Animated } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ExploreScreen from "../screens/Explore/ExploreScreen";
 import HomeScreen from "../screens/Home/HomeScreen";
@@ -13,26 +15,30 @@ export default function TabNavigator({ setSession }) {
 
   const MARGIN = 16;
 
+  const scrollY = useRef(new Animated.Value(0)).current;
+
   return (
     <tab.Navigator
-      tabBar={(props) => <CustomTabBar {...props} />}
+      tabBar={(props) => <CustomTabBar {...props} scrollY={scrollY} />}
       screenOptions={{ headerShown: false }}
     >
       <tab.Screen
         name="Home"
-        component={HomeScreen}
         options={{
           headerShown: false,
         }}
-      />
+      >
+        {(props) => <HomeScreen {...props} scrollY={scrollY} />}
+      </tab.Screen>
 
       <tab.Screen
         name="Explore"
-        component={ExploreScreen}
         options={{
           headerShown: false,
         }}
-      />
+      >
+        {(props) => <ExploreScreen {...props} scrollY={scrollY} />}
+      </tab.Screen>
 
       <tab.Screen
         name="Library"

@@ -51,6 +51,15 @@ export default function StackNavigator({ session, setSession, isFirstLaunch }) {
             >
               {(props) => <SignInScreen {...props} setSession={setSession} />}
             </stack.Screen>
+
+            <stack.Screen
+              name="SignUp"
+              options={{
+                headerShown: false,
+              }}
+            >
+              {(props) => <SignUpScreen {...props} setSession={setSession} />}
+            </stack.Screen>
           </>
         ) : (
           <>

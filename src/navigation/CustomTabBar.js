@@ -1,22 +1,30 @@
 import { Ionicons } from "@expo/vector-icons";
 import {
-    Platform,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Animated,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-export default function CustomTabBar({ state, navigation }) {
+export default function CustomTabBar({ state, navigation, scrollY }) {
   const insets = useSafeAreaInsets();
 
+  const diffClamp = Animated.diffClamp(scrollY, 0, 100);
+
+  const translateY = diffClamp.interpolate({
+    inputRange: [0, 100],
+    outputRange: [0, 100],
+  });
+
   return (
-    <View
+    <Animated.View
       style={[
         styles.container,
         {
-          bottom: Platform.OS === "ios" ? insets.bottom + 10 : 16,
+          transform: [{ translateY }],
+          bottom: Platform.OS === "ios" ? insets.bottom + 40 : 40,
         },
       ]}
     >
@@ -71,7 +79,7 @@ export default function CustomTabBar({ state, navigation }) {
           </TouchableOpacity>
         );
       })}
-    </View>
+    </Animated.View>
   );
 }
 

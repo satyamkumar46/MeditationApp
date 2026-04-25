@@ -1,7 +1,10 @@
 import auth, { GoogleAuthProvider } from "@react-native-firebase/auth";
-import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import {
+  GoogleSignin,
+  statusCodes,
+} from "@react-native-google-signin/google-signin";
 import { StatusBar } from "expo-status-bar";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -19,7 +22,7 @@ import {
 import Octicons from "react-native-vector-icons/Octicons";
 import { useDispatch } from "react-redux";
 import { setUser } from "../../features/slices/userSlice";
-import { signup } from "../../services/authService";
+import { googleLogin, signup } from "../../services/authService";
 import { saveUserToCache } from "../../utility/cache";
 import {
   getScreenWidth,
@@ -99,13 +102,15 @@ const SignUpScreen = ({ navigation, setSession }) => {
       setLoading(true);
       await GoogleSignin.hasPlayServices();
 
+      await GoogleSignin.signOut();
+
       const { data } = await GoogleSignin.signIn();
 
       const idToken = data?.idToken;
       console.log("idToken:", idToken);
 
       if (!idToken) {
-        Alert.alert("Error", "No Google ID Token received");
+        Alert.alert("No account selected");
         return;
       }
 
@@ -146,6 +151,18 @@ const SignUpScreen = ({ navigation, setSession }) => {
         error?.message,
         error,
       );
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        Alert.alert("No account selected");
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        Alert.alert("Sign-in already in progress");
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        Alert.alert("Play services not available");
+      } else {
+        Alert.alert(
+          "Google Sign-In Failed",
+          error?.message || "Something went wrong. Please try again.",
+        );
+      }
       Alert.alert(
         "Google Sign-In Failed",
         error?.message || "Something went wrong. Please try again.",
@@ -264,7 +281,7 @@ const SignUpScreen = ({ navigation, setSession }) => {
 
           {/* google button */}
           <View style={styles.btns}>
-            <Pressable style={styles.googleBtn} onPress={handleGoogleSignUp}>
+            <Pressable style={styles.googleBtn} onPress={handleGoogleLogin}>
               <Image
                 source={require("../../../assets/images/google-logo.png")}
                 style={styles.logoImage}

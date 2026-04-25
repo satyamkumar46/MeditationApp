@@ -142,28 +142,17 @@ const OnboardingScreen = ({ navigation }) => {
       {/* Header */}
       {item.headerType === "brand" ? (
         <View style={styles.brandHeader}>
-          <View style={styles.brandLogoRow}>
-            {/* <Image
-              source={require("../../assest/images/SplashScree-Icon.png")}
-              style={styles.brandLogoIcon}
-              resizeMode="contain"
-            />
-            <Text style={styles.brandName}>Lumina</Text> */}
-          </View>
+          <View style={styles.brandLogoRow}></View>
           <TouchableOpacity onPress={handleSkip}>
             <Text style={styles.skipText}>Skip</Text>
           </TouchableOpacity>
         </View>
       ) : (
         <View style={styles.onboardingHeader}>
-          <TouchableOpacity onPress={goToPrev} style={styles.backBtn}>
-            {/* <Ionicons
-              name="arrow-back"
-              size={moderateScale(22)}
-              color="#F1F5F9"
-            /> */}
-          </TouchableOpacity>
-          {/* <Text style={styles.onboardingHeaderTitle}>Onboarding</Text> */}
+          <TouchableOpacity
+            onPress={goToPrev}
+            style={styles.backBtn}
+          ></TouchableOpacity>
           <TouchableOpacity onPress={handleSkip}>
             <Text style={styles.skipText}>Skip</Text>
           </TouchableOpacity>
@@ -226,7 +215,7 @@ const OnboardingScreen = ({ navigation }) => {
         {/* Footer Links */}
         <View style={styles.footerLinks}>
           <Text style={styles.footerText}>Already have an account? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate("Sign In")}>
+          <TouchableOpacity onPress={() => navigation.navigate("SignIn")}>
             <Text style={styles.footerLink}>Log In</Text>
           </TouchableOpacity>
           {index < 2 && (
