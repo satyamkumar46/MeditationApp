@@ -4,7 +4,7 @@ import {
   Platform,
   StyleSheet,
   Text,
-  TouchableOpacity
+  TouchableOpacity,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -24,7 +24,8 @@ export default function CustomTabBar({ state, navigation, scrollY }) {
         styles.container,
         {
           transform: [{ translateY }],
-          bottom: Platform.OS === "ios" ? insets.bottom + 40 : 40,
+          bottom:
+            Platform.OS === "ios" ? insets.bottom + 10 : insets.bottom + 10,
         },
       ]}
     >

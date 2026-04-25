@@ -1,8 +1,8 @@
+import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Image,
-  Platform,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -10,14 +10,18 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { useDispatch, useSelector } from "react-redux";
-import { useFocusEffect } from "@react-navigation/native";
-import { loadUserStats, loadUserStatsFromCache } from "../../features/actions/userActions";
+import AppLayout from "../../components/AppLayout";
+import {
+  loadUserStats,
+  loadUserStatsFromCache,
+} from "../../features/actions/userActions";
 import { resetUser } from "../../features/slices/userSlice";
-import { moderateScale, scale, verticalScale } from "../../utility/helpers";
 import { clearUserCache } from "../../utility/cache";
+import { moderateScale, scale, verticalScale } from "../../utility/helpers";
 import { removeToken } from "../../utility/storage";
 
 const MENU_ITEMS = [
@@ -51,6 +55,8 @@ const ProfileScreen = ({ navigation, setSession }) => {
   const following = useSelector((state) => state.user.following);
   const bio = useSelector((state) => state.user.bio);
   const dispatch = useDispatch();
+
+  const insets = useSafeAreaInsets();
 
   const [loadingStats, setLoadingStats] = useState(true);
 
@@ -87,12 +93,14 @@ const ProfileScreen = ({ navigation, setSession }) => {
       };
 
       load();
-      return () => { active = false; };
+      return () => {
+        active = false;
+      };
     }, [dispatch]),
   );
 
   return (
-    <View style={styles.container}>
+    <AppLayout style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#112116" />
 
       {/* Header */}
@@ -113,7 +121,10 @@ const ProfileScreen = ({ navigation, setSession }) => {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: insets.bottom + 30 },
+        ]}
       >
         {/* Avatar Section */}
         <View style={styles.avatarSection}>
@@ -196,7 +207,7 @@ const ProfileScreen = ({ navigation, setSession }) => {
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
       </ScrollView>
-    </View>
+    </AppLayout>
   );
 };
 
@@ -211,7 +222,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingTop: Platform.OS === "ios" ? verticalScale(60) : verticalScale(45),
     paddingHorizontal: scale(20),
     paddingBottom: verticalScale(10),
   },
@@ -227,7 +237,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   scrollContent: {
-    paddingBottom: verticalScale(50),
+    paddingTop: verticalScale(10),
   },
   avatarSection: {
     alignItems: "center",
@@ -328,7 +338,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: scale(20),
-    paddingVertical: verticalScale(-50),
+    paddingVertical: verticalScale(12),
   },
   logoutIconContainer: {
     width: moderateScale(44),

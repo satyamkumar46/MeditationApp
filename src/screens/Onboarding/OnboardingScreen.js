@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import AppLayout from "../../components/AppLayout";
 import {
   getScreenWidth,
   moderateScale,
@@ -239,7 +240,7 @@ const OnboardingScreen = ({ navigation }) => {
   );
 
   return (
-    <View style={styles.container}>
+    <AppLayout style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0a1a0f" />
       <Animated.FlatList
         ref={flatListRef}
@@ -257,7 +258,7 @@ const OnboardingScreen = ({ navigation }) => {
         viewabilityConfig={viewabilityConfig}
         bounces={false}
       />
-    </View>
+    </AppLayout>
   );
 };
 

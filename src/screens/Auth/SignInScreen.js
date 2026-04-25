@@ -1,5 +1,8 @@
 import auth, { GoogleAuthProvider } from "@react-native-firebase/auth";
-import { GoogleSignin, statusCodes } from "@react-native-google-signin/google-signin";
+import {
+  GoogleSignin,
+  statusCodes,
+} from "@react-native-google-signin/google-signin";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import {
@@ -9,15 +12,15 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import Octicons from "react-native-vector-icons/Octicons";
 import { useDispatch } from "react-redux";
+import AppLayout from "../../components/AppLayout";
 import { setUser } from "../../features/slices/userSlice";
 import { googleLogin, login } from "../../services/authService";
 import {
@@ -173,7 +176,8 @@ const SignInScreen = ({ navigation, setSession }) => {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <StatusBar style="light" />
-      <ScrollView
+      <AppLayout
+        scroll
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
@@ -287,7 +291,7 @@ const SignInScreen = ({ navigation, setSession }) => {
             <Text style={styles.signUpText}>Sign Up</Text>
           </Pressable>
         </View>
-      </ScrollView>
+      </AppLayout>
     </KeyboardAvoidingView>
   );
 };

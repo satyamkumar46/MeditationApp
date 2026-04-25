@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import AppLayout from "../../components/AppLayout";
 import { getScreenWidth } from "../../utility/helpers";
 
 const width = getScreenWidth();
@@ -103,7 +104,7 @@ const SplashScreen = ({ navigation }) => {
   });
 
   return (
-    <View style={styles.container}>
+    <AppLayout style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0a1a0f" />
 
       {/* Top forest image section with gradient overlay */}
@@ -241,7 +242,7 @@ const SplashScreen = ({ navigation }) => {
           </TouchableOpacity>
         </Animated.View>
       </View>
-    </View>
+    </AppLayout>
   );
 };
 

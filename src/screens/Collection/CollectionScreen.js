@@ -1,7 +1,6 @@
 import {
   ActivityIndicator,
   Image,
-  Platform,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -11,6 +10,7 @@ import {
 } from "react-native";
 import Feather from "react-native-vector-icons/Feather";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import AppLayout from "../../components/AppLayout";
 import useSounds from "../../hooks/useSounds";
 import { moderateScale, scale, verticalScale } from "../../utility/helpers";
 
@@ -26,7 +26,7 @@ const CollectionScreen = ({ navigation }) => {
   }
 
   return (
-    <View style={styles.container}>
+    <AppLayout style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#112116" />
 
       {/* Header */}
@@ -218,7 +218,7 @@ const CollectionScreen = ({ navigation }) => {
           </>
         )}
       </ScrollView>
-    </View>
+    </AppLayout>
   );
 };
 
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#112116",
   },
   header: {
-    paddingTop: Platform.OS === "ios" ? verticalScale(60) : verticalScale(45),
+    // paddingTop: Platform.OS === "ios" ? verticalScale(60) : verticalScale(45),
     paddingHorizontal: scale(16),
     paddingBottom: verticalScale(10),
     flexDirection: "row",

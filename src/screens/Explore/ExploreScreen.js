@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Feather from "react-native-vector-icons/Feather";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import useSounds from "../../hooks/useSounds";
@@ -19,6 +20,7 @@ import useTeachers from "../../hooks/useTeachers";
 import { moderateScale, scale, verticalScale } from "../../utility/helpers";
 
 const ExploreScreen = ({ navigation, scrollY }) => {
+  const insets = useSafeAreaInsets();
   const {
     teachers,
     loading: teachersLoading,
@@ -144,6 +146,9 @@ const ExploreScreen = ({ navigation, scrollY }) => {
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           { useNativeDriver: true },
         )}
+        contentContainerStyle={{
+          paddingBottom: 30 + insets.bottom,
+        }}
       >
         {/* ========== SEARCH RESULTS ========== */}
         {isSearching ? (

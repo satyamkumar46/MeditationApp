@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NavigationContainer } from "@react-navigation/native";
 import { useEffect, useState } from "react";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider, useDispatch } from "react-redux";
 import { resetUser, setUser } from "./src/features/slices/userSlice";
 import { store } from "./src/features/store/Store";
@@ -91,13 +92,15 @@ function AppContent() {
   if (loading) return null;
 
   return (
-    <NavigationContainer>
-      <StackNavigator
-        session={session}
-        setSession={setSession}
-        isFirstLaunch={isFirstLaunch}
-      />
-    </NavigationContainer>
+    <SafeAreaProvider>
+      <NavigationContainer>
+        <StackNavigator
+          session={session}
+          setSession={setSession}
+          isFirstLaunch={isFirstLaunch}
+        />
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 }
 
