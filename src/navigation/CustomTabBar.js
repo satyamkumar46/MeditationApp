@@ -11,11 +11,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 export default function CustomTabBar({ state, navigation, scrollY }) {
   const insets = useSafeAreaInsets();
 
-  const diffClamp = Animated.diffClamp(scrollY, 0, 100);
+  const TAB_HEIGHT = 60 + insets.bottom;
 
-  const translateY = diffClamp.interpolate({
-    inputRange: [0, 100],
-    outputRange: [0, 100],
+  const translateY = scrollY.interpolate({
+    inputRange: [0, 50],
+    outputRange: [0, TAB_HEIGHT],
   });
 
   return (

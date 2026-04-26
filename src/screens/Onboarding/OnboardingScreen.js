@@ -310,7 +310,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingTop: Platform.OS === "ios" ? verticalScale(60) : verticalScale(45),
     paddingHorizontal: scale(20),
     paddingBottom: verticalScale(10),
   },

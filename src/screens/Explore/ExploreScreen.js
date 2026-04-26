@@ -524,7 +524,7 @@ const styles = StyleSheet.create({
     marginLeft: scale(10),
   },
   searchPlaceholder: {
-    fontSize: moderateScale(14),
+    fontSize: moderateScale(13),
     flex: 1,
   },
   contentSection: {

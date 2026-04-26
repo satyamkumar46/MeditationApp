@@ -20,7 +20,9 @@ export default function TabNavigator({ setSession }) {
   return (
     <tab.Navigator
       tabBar={(props) => <CustomTabBar {...props} scrollY={scrollY} />}
-      screenOptions={{ headerShown: false }}
+      screenOptions={{
+        headerShown: false,
+      }}
     >
       <tab.Screen
         name="Home"

@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Modal,
-  Platform,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -18,6 +17,7 @@ import Feather from "react-native-vector-icons/Feather";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { useDispatch, useSelector } from "react-redux";
+import AppLayout from "../../components/AppLayout";
 import { setUser } from "../../features/slices/userSlice";
 import { addSession } from "../../services/userService";
 import { getUserFromCache, saveUserToCache } from "../../utility/cache";
@@ -214,15 +214,15 @@ const TimerScreen = ({ navigation }) => {
         const body = res?.data ?? res ?? {};
         const userObj = body?.user ?? body;
 
-        const newStreak  = userObj?.streak  ?? streak + 1; // fallback: increment locally
-        const newSession = userObj?.session ?? (reduxUser.totalSessions + 1);
-        const newMinutes = userObj?.minutes ?? (reduxUser.totalMinutes + minutes);
+        const newStreak = userObj?.streak ?? streak + 1; // fallback: increment locally
+        const newSession = userObj?.session ?? reduxUser.totalSessions + 1;
+        const newMinutes = userObj?.minutes ?? reduxUser.totalMinutes + minutes;
 
         if (res?.success) {
           setStreak(newStreak);
           dispatch(
             setUser({
-              streak:  newStreak,
+              streak: newStreak,
               session: newSession,
               minutes: newMinutes,
             }),
@@ -231,10 +231,10 @@ const TimerScreen = ({ navigation }) => {
           // Update local cache immediately so ProfileScreen reads fresh data
           // without waiting for an API call (cache-first load)
           try {
-            const existing = await getUserFromCache() || {};
+            const existing = (await getUserFromCache()) || {};
             await saveUserToCache({
               ...existing,
-              streak:  newStreak,
+              streak: newStreak,
               session: newSession,
               minutes: newMinutes,
             });
@@ -385,7 +385,7 @@ const TimerScreen = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <AppLayout style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#112116" />
 
       {/* Header */}
@@ -533,51 +533,6 @@ const TimerScreen = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Ambient Sound */}
-        <View style={styles.ambientSection}>
-          <Text style={styles.ambientTitle}>Ambient Sound</Text>
-          <View style={styles.ambientRow}>
-            {AMBIENT_SOUNDS.map((s) => (
-              <TouchableOpacity
-                key={s.id}
-                style={[
-                  styles.ambientBtn,
-                  selectedSound === s.id && styles.ambientBtnActive,
-                ]}
-                onPress={async () => {
-                  setSelectedSound(s.id);
-                  if (isRunning) {
-                    await cleanupSound();
-                    const { sound: newSound } = await Audio.Sound.createAsync(
-                      { uri: s.url },
-                      {
-                        shouldPlay: true,
-                        isLooping: true,
-                        volume: isMuted ? 0 : 1,
-                      },
-                    );
-                    soundRef.current = newSound;
-                  }
-                }}
-              >
-                <Ionicons
-                  name={s.icon}
-                  size={moderateScale(24)}
-                  color={selectedSound === s.id ? "#112116" : "#20DF60"}
-                />
-                <Text
-                  style={[
-                    styles.ambientLabel,
-                    selectedSound === s.id && styles.ambientLabelActive,
-                  ]}
-                >
-                  {s.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
         {/* Controls */}
         <View style={styles.controlsRow}>
           <TouchableOpacity style={styles.controlBtn} onPress={resetTimer}>
@@ -658,7 +613,7 @@ const TimerScreen = ({ navigation }) => {
           </View>
         </View>
       </Modal>
-    </View>
+    </AppLayout>
   );
 };
 
@@ -667,7 +622,6 @@ export default TimerScreen;
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#112116" },
   header: {
-    paddingTop: Platform.OS === "ios" ? verticalScale(60) : verticalScale(45),
     paddingHorizontal: scale(16),
     paddingBottom: verticalScale(8),
     flexDirection: "row",

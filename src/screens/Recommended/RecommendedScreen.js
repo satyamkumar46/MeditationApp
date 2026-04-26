@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -9,14 +10,14 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Ionicons from "react-native-vector-icons/Ionicons";
 import Feather from "react-native-vector-icons/Feather";
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import Ionicons from "react-native-vector-icons/Ionicons";
 import useSounds from "../../hooks/useSounds";
-import { scale, verticalScale, moderateScale } from "../../utility/helpers";
+import { moderateScale, scale, verticalScale } from "../../utility/helpers";
 
 const RecommendedScreen = ({ navigation }) => {
   const { allTracks, categories, loading, error } = useSounds();
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   if (loading) {
     return (
@@ -25,6 +26,16 @@ const RecommendedScreen = ({ navigation }) => {
       </View>
     );
   }
+
+  const categoryList = [
+    { _id: "all", catname: "All", tracks: allTracks },
+    ...categories,
+  ];
+
+  const filteredTracks =
+    selectedCategory === "All"
+      ? allTracks
+      : allTracks.filter((track) => track.catname === selectedCategory);
 
   return (
     <View style={styles.container}>
@@ -36,7 +47,11 @@ const RecommendedScreen = ({ navigation }) => {
           onPress={() => navigation.goBack()}
           style={styles.backBtn}
         >
-          <Ionicons name="arrow-back" size={moderateScale(24)} color="#20DF60" />
+          <Ionicons
+            name="arrow-back"
+            size={moderateScale(24)}
+            color="#20DF60"
+          />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Recommended</Text>
       </View>
@@ -77,16 +92,46 @@ const RecommendedScreen = ({ navigation }) => {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.categoryFilter}
         >
-          {categories.map((cat) => (
-            <TouchableOpacity key={cat._id} style={styles.categoryChip}>
-              <Text style={styles.categoryChipText}>{cat.catname}</Text>
-              <View style={styles.categoryChipCount}>
-                <Text style={styles.categoryChipCountText}>
-                  {cat.tracks?.length || 0}
+          {categoryList.map((cat) => {
+            const isActive = selectedCategory === cat.catname;
+
+            return (
+              <TouchableOpacity
+                key={cat._id}
+                activeOpacity={0.7}
+                style={[
+                  styles.categoryChip,
+                  isActive && styles.activeCategoryChip,
+                ]}
+                onPress={() => setSelectedCategory(cat.catname)}
+              >
+                <Text
+                  style={[
+                    styles.categoryChipText,
+                    isActive && styles.activeCategoryChipText,
+                  ]}
+                >
+                  {cat.catname}
                 </Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+
+                <View
+                  style={[
+                    styles.categoryChipCount,
+                    isActive && styles.activeCategoryChipCount,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.categoryChipCountText,
+                      isActive && styles.activeCategoryChipCountText,
+                    ]}
+                  >
+                    {cat.tracks?.length || 0}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
 
         {/* Session List */}
@@ -96,13 +141,11 @@ const RecommendedScreen = ({ navigation }) => {
               <Text style={styles.errorText}>Failed to load sounds</Text>
             </View>
           ) : (
-            allTracks.map((track) => (
+            filteredTracks.map((track) => (
               <TouchableOpacity
                 key={track._id}
                 style={styles.sessionCard}
-                onPress={() =>
-                  navigation.navigate("Player", { track })
-                }
+                onPress={() => navigation.navigate("Player", { track })}
               >
                 <Image
                   source={{ uri: track.thumbnail }}
@@ -133,9 +176,7 @@ const RecommendedScreen = ({ navigation }) => {
                   </Text>
                   <TouchableOpacity
                     style={styles.playIconBtn}
-                    onPress={() =>
-                      navigation.navigate("Player", { track })
-                    }
+                    onPress={() => navigation.navigate("Player", { track })}
                   >
                     <Feather
                       name="play"
@@ -240,6 +281,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: scale(16),
     paddingVertical: verticalScale(16),
     gap: scale(8),
+  },
+  activeCategoryChip: {
+    backgroundColor: "#20DF60",
+    borderColor: "#20DF60",
+  },
+
+  activeCategoryChipText: {
+    color: "#112116",
+  },
+
+  activeCategoryChipCount: {
+    backgroundColor: "#112116",
+  },
+
+  activeCategoryChipCountText: {
+    color: "#20DF60",
   },
   categoryChip: {
     flexDirection: "row",

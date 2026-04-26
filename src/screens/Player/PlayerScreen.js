@@ -14,6 +14,7 @@ import Feather from "react-native-vector-icons/Feather";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { useDispatch, useSelector } from "react-redux";
+import AppLayout from "../../components/AppLayout";
 import {
   addRecentPlay,
   toggleFavorite,
@@ -178,7 +179,7 @@ const PlayerScreen = ({ navigation, route }) => {
   const remaining = Math.max(totalTime - currentTime, 0);
 
   return (
-    <View style={styles.container}>
+    <AppLayout style={styles.container}>
       <StatusBar
         barStyle="light-content"
         backgroundColor="transparent"
@@ -207,13 +208,7 @@ const PlayerScreen = ({ navigation, route }) => {
             />
           </TouchableOpacity>
           <Text style={styles.nowPlaying}>NOW PLAYING</Text>
-          <TouchableOpacity style={styles.headerBtn}>
-            <MaterialCommunityIcons
-              name="dots-vertical"
-              size={moderateScale(24)}
-              color="#F1F5F9"
-            />
-          </TouchableOpacity>
+          <View style={styles.headerBtn}></View>
         </View>
 
         {/* Album Art */}
@@ -377,7 +372,7 @@ const PlayerScreen = ({ navigation, route }) => {
           </TouchableOpacity>
         </View>
       </ImageBackground>
-    </View>
+    </AppLayout>
   );
 };
 
@@ -399,7 +394,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingTop: Platform.OS === "ios" ? verticalScale(60) : verticalScale(45),
     paddingHorizontal: scale(16),
   },
   headerBtn: {

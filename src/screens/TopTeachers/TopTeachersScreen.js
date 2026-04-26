@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -16,13 +17,14 @@ import { moderateScale, scale, verticalScale } from "../../utility/helpers";
 const CATEGORIES = [
   "All",
   "Mindfulness",
-  "Zen Master",
-  "Breathwork",
-  "Sleep Expert",
+  "Resilience",
+  "Spiritual",
+  "Awareness",
 ];
 
 const TopTeachersScreen = ({ navigation }) => {
   const { teachers, loading, error } = useTeachers();
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   if (loading) {
     return (
@@ -31,6 +33,15 @@ const TopTeachersScreen = ({ navigation }) => {
       </View>
     );
   }
+
+  const filteredTeachers =
+    selectedCategory === "All"
+      ? teachers
+      : teachers.filter((teacher) =>
+          teacher.expertise
+            ?.toLowerCase()
+            .includes(selectedCategory.toLowerCase()),
+        );
 
   return (
     <View style={styles.container}>
@@ -120,24 +131,30 @@ const TopTeachersScreen = ({ navigation }) => {
           showsHorizontalScrollIndicator={false}
           style={styles.categoriesScroll}
         >
-          {CATEGORIES.map((cat, idx) => ( 
-            <TouchableOpacity
-              key={idx}
-              style={[ 
-                styles.categoryChip,
-                idx === 0 && styles.categoryChipActive,
-              ]}
-            >
-              <Text
+          {CATEGORIES.map((cat, idx) => {
+            const isActive = selectedCategory === cat;
+
+            return (
+              <TouchableOpacity
+                key={idx}
+                activeOpacity={0.7}
                 style={[
-                  styles.categoryChipText,
-                  idx === 0 && styles.categoryChipTextActive,
+                  styles.categoryChip,
+                  isActive && styles.categoryChipActive,
                 ]}
+                onPress={() => setSelectedCategory(cat)}
               >
-                {cat}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                <Text
+                  style={[
+                    styles.categoryChipText,
+                    isActive && styles.categoryChipTextActive,
+                  ]}
+                >
+                  {cat}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
       </View>
       <ScrollView
@@ -151,7 +168,7 @@ const TopTeachersScreen = ({ navigation }) => {
               <Text style={styles.errorText}>Failed to load teachers</Text>
             </View>
           ) : (
-            teachers.map((teacher) => (
+            filteredTeachers.map((teacher) => (
               <TouchableOpacity
                 key={teacher._id}
                 style={styles.instructorCard}
