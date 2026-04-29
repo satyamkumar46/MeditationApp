@@ -1,25 +1,12 @@
 import { Audio } from "expo-av";
 
-/**
- * Global Audio Manager
- *
- * Manages a single audio instance that persists across screen navigations.
- * Music keeps playing when leaving PlayerScreen and only stops when:
- *  - User explicitly pauses
- *  - User plays a different track
- *  - Track finishes
- */
-
 let currentSound = null;
 let currentTrackId = null;
 let statusCallback = null;
 let isPlayerMounted = false;
 
 const GlobalAudioManager = {
-  /**
-   * Load and optionally play a track.
-   * If the same track is already loaded, just returns it.
-   */
+
   async loadTrack(track, shouldPlay = false) {
     // If same track is already loaded, return existing sound
     if (currentTrackId === track._id && currentSound) {

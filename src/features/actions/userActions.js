@@ -2,11 +2,6 @@ import { getUserFromCache, saveUserToCache } from "../../utility/cache";
 import { fetchUsersFromApi, fetchUserStats } from "../../services/userService";
 import { setUser } from "../slices/userSlice";
 
-/**
- * Step 1 — instantly hydrate Redux from local cache (no network).
- * Call this first so the UI renders immediately with no spinner.
- * Returns true if cache data was found, false otherwise.
- */
 export const loadUserStatsFromCache = () => async (dispatch) => {
   try {
     const cached = await getUserFromCache();
