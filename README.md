@@ -2,16 +2,15 @@
 A modern mobile meditation application designed to help users reduce stress, improve focus, and build a consistent mindfulness routine. The app provides guided meditation sessions, authentication features, and a smooth user experience.
 
 # Features
-* Guided Meditation Sessions (Beginner to Advanced)
-* Breathing Exercises & Relaxation Techniques
-* Soothing Sounds & Music for Focus/Sleep
-* Meditation Timer with Custom Duration
-* Progress Tracking & Daily Streaks
-* Reminders & Notifications
-* User Authentication (Firebase / Auth System)
-* Gallery access to change the profile picture
-* Clean & Minimal UI for Distraction-Free Experience
-* Ai Chat System
+* AI-powered emotional chat support
+* Guided meditation sessions
+* Mood-based meditation recommendations
+* Relaxing green-themed modern UI
+* Authentication with Firebase
+* Cross-platform support (Android & iOS)
+* Smooth animations and responsive design
+* Real-time backend integration
+* Secure cloud data storage
 
 # Tech Stack
 * Frontend: React Native / Expo
@@ -19,6 +18,9 @@ A modern mobile meditation application designed to help users reduce stress, imp
 * Authentication: Firebase Auth
 * Database: MongoDB
 * State Management: Redux
+
+# AI Integration
+* Groq API
 
 # ScreenShot 🎥
 
