@@ -11,6 +11,7 @@ A modern mobile meditation application designed to help users reduce stress, imp
 * User Authentication (Firebase / Auth System)
 * Gallery access to change the profile picture
 * Clean & Minimal UI for Distraction-Free Experience
+* Ai Chat System
 
 # Tech Stack
 * Frontend: React Native / Expo
