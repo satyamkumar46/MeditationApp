@@ -1,4 +1,5 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import AiChatScreen from "../screens/AiChat/AiChatScreen";
 import SignInScreen from "../screens/Auth/SignInScreen";
 import SignUpScreen from "../screens/Auth/SignUpScreen";
 import CategoryDetailScreen from "../screens/CategoryDetail/CategoryDetailScreen";
@@ -87,6 +88,11 @@ export default function StackNavigator({ session, setSession, isFirstLaunch }) {
           <stack.Screen name="HomeStack" options={{ headerShown: false }}>
             {(props) => <TabNavigator {...props} setSession={setSession} />}
           </stack.Screen>
+          <stack.Screen
+            name="AIChat"
+            component={AiChatScreen}
+            options={{ headerShown: false }}
+          />
           <stack.Screen
             name="EditProfile"
             component={EditProfileScreen}

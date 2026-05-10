@@ -15,6 +15,8 @@ class ApiClient {
     const url = `${this.baseURL}${endpoint}`;
     const token = await getToken();
 
+    console.log("TOKEN:", token);
+
     const baseConfig = {
       ...options,
       headers: {

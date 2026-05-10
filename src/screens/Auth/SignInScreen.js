@@ -16,7 +16,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import Octicons from "react-native-vector-icons/Octicons";
 import { useDispatch } from "react-redux";
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
     paddingBottom: verticalScale(20),
   },
   title: {
-    paddingTop: verticalScale(125),
+    paddingTop: verticalScale(80),
     paddingHorizontal: scale(40),
     alignItems: "center",
     marginBottom: verticalScale(10),

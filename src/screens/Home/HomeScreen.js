@@ -16,6 +16,7 @@ import Fontisto from "react-native-vector-icons/Fontisto";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { useSelector } from "react-redux";
+import AiFloatingButton from "../../components/AiFloatingButton";
 import AppLayout from "../../components/AppLayout";
 import useSounds from "../../hooks/useSounds";
 import { moderateScale, scale, verticalScale } from "../../utility/helpers";
@@ -340,6 +341,8 @@ const HomeScreen = ({ navigation, scrollY }) => {
             ))}
         </View>
       </Animated.ScrollView>
+
+      <AiFloatingButton onPress={() => navigation.navigate("AIChat")} />
     </AppLayout>
   );
 };

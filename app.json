@@ -3,22 +3,28 @@
     "name": "Zenova",
     "slug": "MeditationApp",
     "extra": {
-      "GOOGLE_WEB_CLIENT_ID": "989828482149-cu7fcl1sjp44g3ak56pmj194fs9btn9q.apps.googleusercontent.com"
+      "router": {},
+      "eas": {
+        "projectId": "b862d3d8-cde9-4356-83a0-bf85f4365634"
+      }
     },
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/screen.png",
+    "icon": "./assets/images/icon-1.png",
     "scheme": "meditationapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "icon": "./assets/images/screen.png",
+      "icon": "./assets/images/icon-1.png",
       "bundleIdentifier": "com.sksatyam.MeditationApp",
       "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
-      "icon": "./assets/images/screen.png",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon-1.png",
+        "backgroundColor": "#0F172A"
+      },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.sksatyam.MeditationApp",
@@ -26,7 +32,7 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/screen.png"
+      "favicon": "./assets/images/icon.png"
     },
     "plugins": [
       "expo-router",
@@ -35,7 +41,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/screen.png",
+          "image": "./assets/images/adaptive-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#1B4332",
@@ -43,17 +49,13 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-secure-store",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    },
-    "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "b862d3d8-cde9-4356-83a0-bf85f4365634"
-      }
     }
   }
 }

@@ -30,33 +30,6 @@ const DURATIONS = [
   { label: "20 min", value: 20 },
 ];
 
-const AMBIENT_SOUNDS = [
-  {
-    id: 1,
-    icon: "cloud-outline",
-    label: "Rain",
-    url: "https://res.cloudinary.com/dya8bskwr/video/upload/v1743427393/meditation-sounds/rain-ambience_lsrfwc.mp3",
-  },
-  {
-    id: 2,
-    icon: "leaf-outline",
-    label: "Forest",
-    url: "https://res.cloudinary.com/dya8bskwr/video/upload/v1743427393/meditation-sounds/forest-ambience_r9c3la.mp3",
-  },
-  {
-    id: 3,
-    icon: "water-outline",
-    label: "Waves",
-    url: "https://res.cloudinary.com/dya8bskwr/video/upload/v1743427393/meditation-sounds/ocean-waves_xhqvke.mp3",
-  },
-  {
-    id: 4,
-    icon: "sparkles-outline",
-    label: "Zen",
-    url: "https://res.cloudinary.com/dya8bskwr/video/upload/v1743427393/meditation-sounds/zen-bells_ij2wfz.mp3",
-  },
-];
-
 const TIPS = [
   "Focus on your breath and let thoughts pass like clouds.",
   "Count each exhale from 1 to 10.",
