@@ -1,5 +1,5 @@
-# 🧘 Meditation App
-A modern mobile meditation application designed to help users reduce stress, improve focus, and build a consistent mindfulness routine. The app provides guided meditation sessions, authentication features, and a smooth user experience.
+# 🧘 Zenova – AI Powered Meditation App
+Zenova is a modern meditation and mindfulness mobile application built with React Native. The app helps users relax, focus, reduce stress, and improve mental wellness through guided meditation sessions, calming UI experiences, and AI-powered emotional support.
 
 # Features
 * AI-powered emotional chat support
