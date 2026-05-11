@@ -25,7 +25,12 @@ Zenova is a modern meditation and mindfulness mobile application built with Reac
 # ScreenShot 🎥
 
 
-https://github.com/user-attachments/assets/e3c479a5-4e64-4ca7-9d0a-7bf69456fa44
+
+https://github.com/user-attachments/assets/6249c027-25d5-4773-a724-4d37ef16ee1e
+
+
+
+
 
 
 # Installation
